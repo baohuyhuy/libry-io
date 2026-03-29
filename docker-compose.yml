@@ -19,24 +19,5 @@ services:
       retries: 10
       start_period: 20s
 
-  mysql-workbench:
-    image: lscr.io/linuxserver/mysql-workbench:latest
-    container_name: libry-mysql-workbench
-    restart: unless-stopped
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      PUID: 1000
-      PGID: 1000
-      TZ: UTC
-    ports:
-      - '3000:3000'
-      - '3001:3001'
-    volumes:
-      - mysql-workbench-data:/config
-    shm_size: '1gb'
-
 volumes:
   mysql-data:
-  mysql-workbench-data:
