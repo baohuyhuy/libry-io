@@ -15,11 +15,11 @@ public class Librarian {
     @Column(name = "librarian_id", nullable = false)
     private int librarianId;
 
-    @NotNull
+    @NotNull(message = "Username cannot be null")
     @Column(name = "username", nullable = false)
     private String username;
 
-    @NotNull
+    @NotNull(message = "Password cannot be null")
     @Column(name = "password_hash", nullable = false)
     private String password;
 

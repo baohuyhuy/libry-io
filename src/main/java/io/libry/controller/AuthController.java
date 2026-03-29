@@ -3,6 +3,7 @@ package io.libry.controller;
 import io.libry.dto.TokenResponse;
 import io.libry.entity.Librarian;
 import io.libry.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,13 +24,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public Librarian register(@RequestBody Librarian librarian) {
+    public Librarian register(@Valid @RequestBody Librarian librarian) {
         librarian.setPassword(encoder.encode(librarian.getPassword()));
         return authService.register(librarian);
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@RequestBody Librarian librarian) {
+    public TokenResponse login(@Valid @RequestBody Librarian librarian) {
         return authService.verify(librarian);
     }
 
