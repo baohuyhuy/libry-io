@@ -58,4 +58,12 @@ public class ReaderController {
                 .noContent()
                 .build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteReader(@PathVariable("id") Long readerId) {
+        readerService.deleteReader(readerId);
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
 }

@@ -76,4 +76,12 @@ public class ReaderServiceImpl implements ReaderService {
 
         readerRepository.save(existingReader);
     }
+
+    @Override
+    public void deleteReader(Long readerId) {
+        if (!readerRepository.existsById(readerId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        readerRepository.deleteById(readerId);
+    }
 }
