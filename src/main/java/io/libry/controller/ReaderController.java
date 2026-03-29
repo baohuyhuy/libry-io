@@ -11,6 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/readers")
@@ -31,6 +32,25 @@ public class ReaderController {
         return ResponseEntity.ok(readerService.findById(readerId));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<?> search(@RequestParam(value = "id_card_number", required = false) String idCardNumber,
+                                    @RequestParam(value = "full_name", required = false) String fullName) {
+        if (idCardNumber != null && fullName != null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("error", "Only one search parameter is allowed at a time"));
+        }
+        if (idCardNumber != null) {
+            return ResponseEntity.ok(readerService.findByIdCardNumber(idCardNumber));
+        }
+        if (fullName != null) {
+            return ResponseEntity.ok(readerService.findByFullName(fullName));
+        }
+        return ResponseEntity
+                .badRequest()
+                .body(Map.of("error", "Provide at least one search parameter: id_card_number or full_name"));
+    }
+    
     @PostMapping("/")
     public ResponseEntity<Void> createReader(@Valid @RequestBody Reader newReader) {
         Reader reader = readerService.createReader(newReader);

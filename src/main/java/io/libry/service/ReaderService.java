@@ -18,4 +18,8 @@ public interface ReaderService {
     void deleteReader(Long readerId);
 
     Reader findById(Long readerId);
+
+    Reader findByIdCardNumber(String idCardNumber);
+
+    List<Reader> findByFullName(String fullName);
 }

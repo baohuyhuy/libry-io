@@ -91,4 +91,16 @@ public class ReaderServiceImpl implements ReaderService {
                 .findById(readerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
+
+    @Override
+    public Reader findByIdCardNumber(String idCardNumber) {
+        return readerRepository
+                .findByIdCardNumber(idCardNumber)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    public List<Reader> findByFullName(String fullName) {
+        return readerRepository.findByFullNameContainingIgnoreCase(fullName);
+    }
 }
