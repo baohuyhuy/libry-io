@@ -33,4 +33,4 @@ build/
 .vscode/
 
 Library Management Platform.md
-**/application.yaml
+src/main/resources/application.yaml
