@@ -1,0 +1,20 @@
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  security:
+    user:
+      name: test
+      password: test
+
+app:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci1jaS10ZXN0aW5nLW9ubHktMTIzNDU2Nzg=
+    expiration: 3600000
