@@ -16,4 +16,6 @@ public interface ReaderService {
     void patchReader(Long readerId, PatchReaderRequest request);
 
     void deleteReader(Long readerId);
+
+    Reader findById(Long readerId);
 }

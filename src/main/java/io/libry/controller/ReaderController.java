@@ -26,6 +26,11 @@ public class ReaderController {
         return readerService.getAllReaders();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Reader> findById(@PathVariable("id") Long readerId) {
+        return ResponseEntity.ok(readerService.findById(readerId));
+    }
+
     @PostMapping("/")
     public ResponseEntity<Void> createReader(@Valid @RequestBody Reader newReader) {
         Reader reader = readerService.createReader(newReader);

@@ -84,4 +84,11 @@ public class ReaderServiceImpl implements ReaderService {
         }
         readerRepository.deleteById(readerId);
     }
+
+    @Override
+    public Reader findById(Long readerId) {
+        return readerRepository
+                .findById(readerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
 }
