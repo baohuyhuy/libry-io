@@ -1,7 +1,8 @@
 package io.libry.service;
 
-import io.libry.dto.PatchReaderRequest;
-import io.libry.dto.PutReaderRequest;
+import io.libry.dto.reader.PatchReaderRequest;
+import io.libry.dto.reader.ReaderRequest;
+import io.libry.dto.reader.ReaderResponse;
 import io.libry.entity.Reader;
 import io.libry.repository.ReaderRepository;
 import io.libry.service.impl.ReaderServiceImpl;
@@ -41,7 +42,9 @@ class ReaderServiceImplTest {
         reader.setIdCardNumber("84839281423");
         reader.setDob(LocalDate.of(1990, 1, 1));
         reader.setEmail("thomas@example.com");
-        reader.setExpiryDate(LocalDate.now().plusYears(2));
+        reader.setExpiryDate(LocalDate
+                .now()
+                .plusYears(2));
     }
 
     // --- getAllReaders ---
@@ -50,16 +53,18 @@ class ReaderServiceImplTest {
     void getAllReaders_returnsAllReaders() {
         when(readerRepository.findAll()).thenReturn(List.of(reader));
 
-        List<Reader> result = readerService.getAllReaders();
+        List<ReaderResponse> result = readerService.getAllReaders();
 
-        assertThat(result).hasSize(1).contains(reader);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).fullName()).isEqualTo("Thomas Shelby");
+        assertThat(result.get(0).idCardNumber()).isEqualTo("84839281423");
     }
 
     @Test
     void getAllReaders_returnsEmptyList_whenNoReaders() {
         when(readerRepository.findAll()).thenReturn(List.of());
 
-        List<Reader> result = readerService.getAllReaders();
+        List<ReaderResponse> result = readerService.getAllReaders();
 
         assertThat(result).isEmpty();
     }
@@ -68,12 +73,19 @@ class ReaderServiceImplTest {
 
     @Test
     void createReader_savesAndReturnsReader() {
-        when(readerRepository.save(reader)).thenReturn(reader);
+        ReaderRequest request = new ReaderRequest(
+                "Thomas Shelby", "84839281423",
+                LocalDate.of(1990, 1, 1), null,
+                "thomas@example.com", null,
+                LocalDate.now().plusYears(2));
 
-        Reader result = readerService.createReader(reader);
+        when(readerRepository.save(any(Reader.class))).thenReturn(reader);
 
-        assertThat(result).isEqualTo(reader);
-        verify(readerRepository).save(reader);
+        ReaderResponse result = readerService.createReader(request);
+
+        assertThat(result.fullName()).isEqualTo("Thomas Shelby");
+        assertThat(result.idCardNumber()).isEqualTo("84839281423");
+        verify(readerRepository).save(any(Reader.class));
     }
 
     // --- findById ---
@@ -82,9 +94,10 @@ class ReaderServiceImplTest {
     void findById_returnsReader_whenFound() {
         when(readerRepository.findById(1L)).thenReturn(Optional.of(reader));
 
-        Reader result = readerService.findById(1L);
+        ReaderResponse result = readerService.findById(1L);
 
-        assertThat(result).isEqualTo(reader);
+        assertThat(result.readerId()).isEqualTo(1L);
+        assertThat(result.fullName()).isEqualTo("Thomas Shelby");
     }
 
     @Test
@@ -102,9 +115,9 @@ class ReaderServiceImplTest {
     void findByIdCardNumber_returnsReader_whenFound() {
         when(readerRepository.findByIdCardNumber("84839281423")).thenReturn(Optional.of(reader));
 
-        Reader result = readerService.findByIdCardNumber("84839281423");
+        ReaderResponse result = readerService.findByIdCardNumber("84839281423");
 
-        assertThat(result).isEqualTo(reader);
+        assertThat(result.idCardNumber()).isEqualTo("84839281423");
     }
 
     @Test
@@ -122,16 +135,17 @@ class ReaderServiceImplTest {
     void findByFullName_returnsMatchingReaders() {
         when(readerRepository.findByFullNameContainingIgnoreCase("thomas")).thenReturn(List.of(reader));
 
-        List<Reader> result = readerService.findByFullName("thomas");
+        List<ReaderResponse> result = readerService.findByFullName("thomas");
 
-        assertThat(result).hasSize(1).contains(reader);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).fullName()).isEqualTo("Thomas Shelby");
     }
 
     @Test
     void findByFullName_returnsEmptyList_whenNoMatch() {
         when(readerRepository.findByFullNameContainingIgnoreCase("xyz")).thenReturn(List.of());
 
-        List<Reader> result = readerService.findByFullName("xyz");
+        List<ReaderResponse> result = readerService.findByFullName("xyz");
 
         assertThat(result).isEmpty();
     }
@@ -140,11 +154,13 @@ class ReaderServiceImplTest {
 
     @Test
     void putReader_updatesAllFields() {
-        PutReaderRequest request = new PutReaderRequest(
+        ReaderRequest request = new ReaderRequest(
                 "Arthur Shelby", "99999999999",
                 LocalDate.of(1985, 5, 10), "Male",
                 "arthur@example.com", "Birmingham",
-                LocalDate.now().plusYears(3));
+                LocalDate
+                        .now()
+                        .plusYears(3));
 
         when(readerRepository.findById(1L)).thenReturn(Optional.of(reader));
 
@@ -158,10 +174,12 @@ class ReaderServiceImplTest {
 
     @Test
     void putReader_throws404_whenNotFound() {
-        PutReaderRequest request = new PutReaderRequest(
+        ReaderRequest request = new ReaderRequest(
                 "Arthur Shelby", "99999999999",
                 LocalDate.of(1985, 5, 10), null, null, null,
-                LocalDate.now().plusYears(3));
+                LocalDate
+                        .now()
+                        .plusYears(3));
 
         when(readerRepository.findById(99L)).thenReturn(Optional.empty());
 

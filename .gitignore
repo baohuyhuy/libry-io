@@ -34,3 +34,5 @@ build/
 
 Library Management Platform.md
 src/main/resources/application.yaml
+
+db.erd

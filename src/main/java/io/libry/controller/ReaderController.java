@@ -1,8 +1,8 @@
 package io.libry.controller;
 
-import io.libry.dto.PatchReaderRequest;
-import io.libry.dto.PutReaderRequest;
-import io.libry.entity.Reader;
+import io.libry.dto.reader.PatchReaderRequest;
+import io.libry.dto.reader.ReaderRequest;
+import io.libry.dto.reader.ReaderResponse;
 import io.libry.service.ReaderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +23,12 @@ public class ReaderController {
     }
 
     @GetMapping("/")
-    public List<Reader> getAllReaders() {
+    public List<ReaderResponse> getAllReaders() {
         return readerService.getAllReaders();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Reader> findById(@PathVariable("id") Long readerId) {
+    public ResponseEntity<ReaderResponse> findById(@PathVariable("id") Long readerId) {
         return ResponseEntity.ok(readerService.findById(readerId));
     }
 
@@ -50,15 +50,15 @@ public class ReaderController {
                 .badRequest()
                 .body(Map.of("error", "Provide at least one search parameter: id_card_number or full_name"));
     }
-    
+
     @PostMapping("/")
-    public ResponseEntity<Void> createReader(@Valid @RequestBody Reader newReader) {
-        Reader reader = readerService.createReader(newReader);
+    public ResponseEntity<Void> createReader(@Valid @RequestBody ReaderRequest newReader) {
+        ReaderResponse reader = readerService.createReader(newReader);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequestUri()
                 .path("/{resourceId}")
-                .buildAndExpand(reader.getReaderId())
+                .buildAndExpand(reader.readerId())
                 .toUri();
 
         return ResponseEntity
@@ -68,7 +68,7 @@ public class ReaderController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Void> putReader(@PathVariable("id") Long readerId,
-                                          @Valid @RequestBody PutReaderRequest request) {
+                                          @Valid @RequestBody ReaderRequest request) {
         readerService.putReader(readerId, request);
         return ResponseEntity
                 .noContent()
