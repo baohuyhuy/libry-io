@@ -1,9 +1,9 @@
 package io.libry.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.libry.dto.PatchReaderRequest;
-import io.libry.dto.PutReaderRequest;
-import io.libry.entity.Reader;
+import io.libry.dto.reader.PatchReaderRequest;
+import io.libry.dto.reader.ReaderRequest;
+import io.libry.dto.reader.ReaderResponse;
 import io.libry.service.JWTService;
 import io.libry.service.ReaderService;
 import io.libry.service.impl.LibrarianDetailsServiceImpl;
@@ -26,7 +26,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReaderController.class)
 @WithMockUser
@@ -47,27 +48,32 @@ class ReaderControllerTest {
     @MockitoBean
     private LibrarianDetailsServiceImpl librarianDetailsService;
 
-    private Reader reader;
+    private ReaderResponse readerResponse;
 
     @BeforeEach
     void setUp() {
-        reader = new Reader();
-        reader.setReaderId(1L);
-        reader.setFullName("Thomas Shelby");
-        reader.setIdCardNumber("84839281423");
-        reader.setDob(LocalDate.of(1990, 1, 1));
-        reader.setEmail("thomas@example.com");
-        reader.setCreationDate(LocalDate.now());
-        reader.setExpiryDate(LocalDate.now().plusYears(2));
+        readerResponse = new ReaderResponse(
+                1L,
+                "Thomas Shelby",
+                "84839281423",
+                LocalDate.of(1990, 1, 1),
+                null,
+                "thomas@example.com",
+                null,
+                LocalDate.now(),
+                LocalDate.now().plusYears(2),
+                null
+        );
     }
 
     // --- GET /api/readers/ ---
 
     @Test
     void getAllReaders_returns200WithList() throws Exception {
-        when(readerService.getAllReaders()).thenReturn(List.of(reader));
+        when(readerService.getAllReaders()).thenReturn(List.of(readerResponse));
 
-        mockMvc.perform(get("/api/readers/"))
+        mockMvc
+                .perform(get("/api/readers/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].full_name").value("Thomas Shelby"))
                 .andExpect(jsonPath("$[0].id_card_number").value("84839281423"));
@@ -77,7 +83,8 @@ class ReaderControllerTest {
     void getAllReaders_returns200WithEmptyList() throws Exception {
         when(readerService.getAllReaders()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/readers/"))
+        mockMvc
+                .perform(get("/api/readers/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
     }
@@ -86,9 +93,10 @@ class ReaderControllerTest {
 
     @Test
     void findById_returns200_whenFound() throws Exception {
-        when(readerService.findById(1L)).thenReturn(reader);
+        when(readerService.findById(1L)).thenReturn(readerResponse);
 
-        mockMvc.perform(get("/api/readers/1"))
+        mockMvc
+                .perform(get("/api/readers/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.full_name").value("Thomas Shelby"));
     }
@@ -98,13 +106,15 @@ class ReaderControllerTest {
         when(readerService.findById(99L))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        mockMvc.perform(get("/api/readers/99"))
+        mockMvc
+                .perform(get("/api/readers/99"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void findById_returns400_whenIdIsNotANumber() throws Exception {
-        mockMvc.perform(get("/api/readers/abc"))
+        mockMvc
+                .perform(get("/api/readers/abc"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }
@@ -113,7 +123,7 @@ class ReaderControllerTest {
 
     @Test
     void createReader_returns201_whenValid() throws Exception {
-        when(readerService.createReader(any())).thenReturn(reader);
+        when(readerService.createReader(any())).thenReturn(readerResponse);
 
         String body = """
                 {
@@ -122,9 +132,12 @@ class ReaderControllerTest {
                     "dob": "1990-01-01",
                     "expiry_date": "%s"
                 }
-                """.formatted(LocalDate.now().plusYears(2));
+                """.formatted(LocalDate
+                .now()
+                .plusYears(2));
 
-        mockMvc.perform(post("/api/readers/")
+        mockMvc
+                .perform(post("/api/readers/")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -139,7 +152,8 @@ class ReaderControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/readers/")
+        mockMvc
+                .perform(post("/api/readers/")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -158,9 +172,12 @@ class ReaderControllerTest {
                     "email": "not-an-email",
                     "expiry_date": "%s"
                 }
-                """.formatted(LocalDate.now().plusYears(2));
+                """.formatted(LocalDate
+                .now()
+                .plusYears(2));
 
-        mockMvc.perform(post("/api/readers/")
+        mockMvc
+                .perform(post("/api/readers/")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -178,7 +195,8 @@ class ReaderControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/readers/")
+        mockMvc
+                .perform(post("/api/readers/")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -190,7 +208,9 @@ class ReaderControllerTest {
 
     @Test
     void putReader_returns204_whenValid() throws Exception {
-        doNothing().when(readerService).putReader(eq(1L), any(PutReaderRequest.class));
+        doNothing()
+                .when(readerService)
+                .putReader(eq(1L), any(ReaderRequest.class));
 
         String body = """
                 {
@@ -199,9 +219,12 @@ class ReaderControllerTest {
                     "dob": "1985-05-10",
                     "expiry_date": "%s"
                 }
-                """.formatted(LocalDate.now().plusYears(3));
+                """.formatted(LocalDate
+                .now()
+                .plusYears(3));
 
-        mockMvc.perform(put("/api/readers/1")
+        mockMvc
+                .perform(put("/api/readers/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -211,7 +234,8 @@ class ReaderControllerTest {
     @Test
     void putReader_returns404_whenNotFound() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
-                .when(readerService).putReader(eq(99L), any(PutReaderRequest.class));
+                .when(readerService)
+                .putReader(eq(99L), any(ReaderRequest.class));
 
         String body = """
                 {
@@ -220,9 +244,12 @@ class ReaderControllerTest {
                     "dob": "1985-05-10",
                     "expiry_date": "%s"
                 }
-                """.formatted(LocalDate.now().plusYears(3));
+                """.formatted(LocalDate
+                .now()
+                .plusYears(3));
 
-        mockMvc.perform(put("/api/readers/99")
+        mockMvc
+                .perform(put("/api/readers/99")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -233,7 +260,9 @@ class ReaderControllerTest {
 
     @Test
     void patchReader_returns204_whenValid() throws Exception {
-        doNothing().when(readerService).patchReader(eq(1L), any(PatchReaderRequest.class));
+        doNothing()
+                .when(readerService)
+                .patchReader(eq(1L), any(PatchReaderRequest.class));
 
         String body = """
                 {
@@ -241,7 +270,8 @@ class ReaderControllerTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/readers/1")
+        mockMvc
+                .perform(patch("/api/readers/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -254,9 +284,12 @@ class ReaderControllerTest {
                 {
                     "dob": "%s"
                 }
-                """.formatted(LocalDate.now().plusYears(1));
+                """.formatted(LocalDate
+                .now()
+                .plusYears(1));
 
-        mockMvc.perform(patch("/api/readers/1")
+        mockMvc
+                .perform(patch("/api/readers/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -272,7 +305,8 @@ class ReaderControllerTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/readers/1")
+        mockMvc
+                .perform(patch("/api/readers/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -284,18 +318,23 @@ class ReaderControllerTest {
 
     @Test
     void deleteReader_returns204_whenFound() throws Exception {
-        doNothing().when(readerService).deleteReader(1L);
+        doNothing()
+                .when(readerService)
+                .deleteReader(1L);
 
-        mockMvc.perform(delete("/api/readers/1").with(csrf()))
+        mockMvc
+                .perform(delete("/api/readers/1").with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void deleteReader_returns404_whenNotFound() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
-                .when(readerService).deleteReader(99L);
+                .when(readerService)
+                .deleteReader(99L);
 
-        mockMvc.perform(delete("/api/readers/99").with(csrf()))
+        mockMvc
+                .perform(delete("/api/readers/99").with(csrf()))
                 .andExpect(status().isNotFound());
     }
 
@@ -303,9 +342,10 @@ class ReaderControllerTest {
 
     @Test
     void search_byIdCardNumber_returns200_whenFound() throws Exception {
-        when(readerService.findByIdCardNumber("84839281423")).thenReturn(reader);
+        when(readerService.findByIdCardNumber("84839281423")).thenReturn(readerResponse);
 
-        mockMvc.perform(get("/api/readers/search").param("id_card_number", "84839281423"))
+        mockMvc
+                .perform(get("/api/readers/search").param("id_card_number", "84839281423"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id_card_number").value("84839281423"));
     }
@@ -315,15 +355,17 @@ class ReaderControllerTest {
         when(readerService.findByIdCardNumber("000"))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        mockMvc.perform(get("/api/readers/search").param("id_card_number", "000"))
+        mockMvc
+                .perform(get("/api/readers/search").param("id_card_number", "000"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void search_byFullName_returns200WithMatches() throws Exception {
-        when(readerService.findByFullName("thomas")).thenReturn(List.of(reader));
+        when(readerService.findByFullName("thomas")).thenReturn(List.of(readerResponse));
 
-        mockMvc.perform(get("/api/readers/search").param("full_name", "thomas"))
+        mockMvc
+                .perform(get("/api/readers/search").param("full_name", "thomas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].full_name").value("Thomas Shelby"));
     }
@@ -332,14 +374,16 @@ class ReaderControllerTest {
     void search_byFullName_returns200WithEmptyList_whenNoMatch() throws Exception {
         when(readerService.findByFullName("xyz")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/readers/search").param("full_name", "xyz"))
+        mockMvc
+                .perform(get("/api/readers/search").param("full_name", "xyz"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
     void search_returns400_whenBothParamsGiven() throws Exception {
-        mockMvc.perform(get("/api/readers/search")
+        mockMvc
+                .perform(get("/api/readers/search")
                         .param("id_card_number", "84839281423")
                         .param("full_name", "thomas"))
                 .andExpect(status().isBadRequest())
@@ -348,7 +392,8 @@ class ReaderControllerTest {
 
     @Test
     void search_returns400_whenNoParamsGiven() throws Exception {
-        mockMvc.perform(get("/api/readers/search"))
+        mockMvc
+                .perform(get("/api/readers/search"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }

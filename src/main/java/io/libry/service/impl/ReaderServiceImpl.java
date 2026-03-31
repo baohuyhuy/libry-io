@@ -1,7 +1,8 @@
 package io.libry.service.impl;
 
-import io.libry.dto.PatchReaderRequest;
-import io.libry.dto.PutReaderRequest;
+import io.libry.dto.reader.PatchReaderRequest;
+import io.libry.dto.reader.ReaderRequest;
+import io.libry.dto.reader.ReaderResponse;
 import io.libry.entity.Reader;
 import io.libry.repository.ReaderRepository;
 import io.libry.service.ReaderService;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -20,28 +22,29 @@ public class ReaderServiceImpl implements ReaderService {
     }
 
     @Override
-    public List<Reader> getAllReaders() {
-        return readerRepository.findAll();
+    public List<ReaderResponse> getAllReaders() {
+        return readerRepository.findAll().stream()
+                .map(ReaderResponse::from)
+                .toList();
     }
 
     @Override
-    public Reader createReader(Reader reader) {
-        return readerRepository.save(reader);
+    public ReaderResponse createReader(ReaderRequest reader) {
+        Reader newReader = new Reader();
+        populateReaderDetails(newReader, reader.fullName(), reader.idCardNumber(), reader.dob(), reader.gender(), reader.email(), reader.address(), reader.expiryDate());
+
+        return ReaderResponse.from(readerRepository.save(newReader));
     }
 
     @Override
-    public void putReader(Long readerId, PutReaderRequest request) {
+    public void putReader(Long readerId, ReaderRequest request) {
         Reader existingReader = readerRepository
                 .findById(readerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        existingReader.setFullName(request.fullName());
-        existingReader.setIdCardNumber(request.idCardNumber());
-        existingReader.setDob(request.dob());
-        existingReader.setGender(request.gender());
-        existingReader.setEmail(request.email());
-        existingReader.setAddress(request.address());
-        existingReader.setExpiryDate(request.expiryDate());
+        populateReaderDetails(existingReader, request.fullName(),
+                request.idCardNumber(), request.dob(), request.gender(),
+                request.email(), request.address(), request.expiryDate());
 
         readerRepository.save(existingReader);
     }
@@ -86,21 +89,39 @@ public class ReaderServiceImpl implements ReaderService {
     }
 
     @Override
-    public Reader findById(Long readerId) {
+    public ReaderResponse findById(Long readerId) {
         return readerRepository
                 .findById(readerId)
+                .map(ReaderResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     @Override
-    public Reader findByIdCardNumber(String idCardNumber) {
+    public ReaderResponse findByIdCardNumber(String idCardNumber) {
         return readerRepository
                 .findByIdCardNumber(idCardNumber)
+                .map(ReaderResponse::from)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     @Override
-    public List<Reader> findByFullName(String fullName) {
-        return readerRepository.findByFullNameContainingIgnoreCase(fullName);
+    public List<ReaderResponse> findByFullName(String fullName) {
+        return readerRepository.findByFullNameContainingIgnoreCase(fullName).stream()
+                .map(ReaderResponse::from)
+                .toList();
+    }
+
+    static private void populateReaderDetails(Reader newReader, String fullName,
+                                              String idCardNumber,
+                                              LocalDate dob, String gender,
+                                              String email, String address,
+                                              LocalDate expiryDate) {
+        newReader.setFullName(fullName);
+        newReader.setIdCardNumber(idCardNumber);
+        newReader.setDob(dob);
+        newReader.setGender(gender);
+        newReader.setEmail(email);
+        newReader.setAddress(address);
+        newReader.setExpiryDate(expiryDate);
     }
 }

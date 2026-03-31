@@ -1,25 +1,25 @@
 package io.libry.service;
 
-import io.libry.dto.PatchReaderRequest;
-import io.libry.dto.PutReaderRequest;
-import io.libry.entity.Reader;
+import io.libry.dto.reader.PatchReaderRequest;
+import io.libry.dto.reader.ReaderRequest;
+import io.libry.dto.reader.ReaderResponse;
 
 import java.util.List;
 
 public interface ReaderService {
-    List<Reader> getAllReaders();
+    List<ReaderResponse> getAllReaders();
 
-    Reader createReader(Reader reader);
+    ReaderResponse createReader(ReaderRequest reader);
 
-    void putReader(Long readerId, PutReaderRequest request);
+    void putReader(Long readerId, ReaderRequest request);
 
     void patchReader(Long readerId, PatchReaderRequest request);
 
     void deleteReader(Long readerId);
 
-    Reader findById(Long readerId);
+    ReaderResponse findById(Long readerId);
 
-    Reader findByIdCardNumber(String idCardNumber);
+    ReaderResponse findByIdCardNumber(String idCardNumber);
 
-    List<Reader> findByFullName(String fullName);
+    List<ReaderResponse> findByFullName(String fullName);
 }

@@ -1,4 +1,4 @@
-package io.libry.dto;
+package io.libry.dto.reader;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Future;
