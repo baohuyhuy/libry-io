@@ -1,10 +1,11 @@
 package io.libry.service;
 
-import io.libry.dto.TokenResponse;
-import io.libry.entity.Librarian;
+import io.libry.dto.librarian.LibrarianRequest;
+import io.libry.dto.librarian.LibrarianResponse;
+import io.libry.dto.librarian.TokenResponse;
 
 public interface AuthService {
-    Librarian register(Librarian librarian);
+    LibrarianResponse register(LibrarianRequest request);
 
-    TokenResponse verify(Librarian librarian);
+    TokenResponse verify(LibrarianRequest request);
 }
