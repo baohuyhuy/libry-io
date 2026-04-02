@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -86,6 +87,12 @@ public class GlobalExceptionHandler {
             errors.put(snakeField, violation.getMessage());
         });
         return errors;
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(BadCredentialsException.class)
+    public Map<String, String> handleBadCredentials(BadCredentialsException ex) {
+        return Map.of("error", "Invalid username or password");
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
