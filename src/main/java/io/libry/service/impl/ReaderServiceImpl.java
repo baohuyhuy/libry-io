@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -23,15 +22,17 @@ public class ReaderServiceImpl implements ReaderService {
 
     @Override
     public List<ReaderResponse> getAllReaders() {
-        return readerRepository.findAll().stream()
+        return readerRepository
+                .findAll()
+                .stream()
                 .map(ReaderResponse::from)
                 .toList();
     }
 
     @Override
-    public ReaderResponse createReader(ReaderRequest reader) {
+    public ReaderResponse createReader(ReaderRequest request) {
         Reader newReader = new Reader();
-        populateReaderDetails(newReader, reader.fullName(), reader.idCardNumber(), reader.dob(), reader.gender(), reader.email(), reader.address(), reader.expiryDate());
+        populateReaderDetails(request, newReader);
 
         return ReaderResponse.from(readerRepository.save(newReader));
     }
@@ -42,9 +43,7 @@ public class ReaderServiceImpl implements ReaderService {
                 .findById(readerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        populateReaderDetails(existingReader, request.fullName(),
-                request.idCardNumber(), request.dob(), request.gender(),
-                request.email(), request.address(), request.expiryDate());
+        populateReaderDetails(request, existingReader);
 
         readerRepository.save(existingReader);
     }
@@ -106,22 +105,21 @@ public class ReaderServiceImpl implements ReaderService {
 
     @Override
     public List<ReaderResponse> findByFullName(String fullName) {
-        return readerRepository.findByFullNameContainingIgnoreCase(fullName).stream()
+        return readerRepository
+                .findByFullNameContainingIgnoreCase(fullName)
+                .stream()
                 .map(ReaderResponse::from)
                 .toList();
     }
 
-    static private void populateReaderDetails(Reader newReader, String fullName,
-                                              String idCardNumber,
-                                              LocalDate dob, String gender,
-                                              String email, String address,
-                                              LocalDate expiryDate) {
-        newReader.setFullName(fullName);
-        newReader.setIdCardNumber(idCardNumber);
-        newReader.setDob(dob);
-        newReader.setGender(gender);
-        newReader.setEmail(email);
-        newReader.setAddress(address);
-        newReader.setExpiryDate(expiryDate);
+    static private void populateReaderDetails(ReaderRequest request,
+                                              Reader newReader) {
+        newReader.setFullName(request.fullName());
+        newReader.setIdCardNumber(request.idCardNumber());
+        newReader.setDob(request.dob());
+        newReader.setGender(request.gender());
+        newReader.setEmail(request.email());
+        newReader.setAddress(request.address());
+        newReader.setExpiryDate(request.expiryDate());
     }
 }
