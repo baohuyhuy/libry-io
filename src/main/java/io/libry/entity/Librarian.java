@@ -1,25 +1,25 @@
 package io.libry.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-@Entity(name = "librarians")
-@Data
+@Entity
+@Table(name = "librarians")
+@Getter
+@Setter
 public class Librarian {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "librarian_id", nullable = false)
-    private int librarianId;
+    private Long librarianId;
 
-    @NotNull(message = "Username cannot be null")
-    @Column(name = "username", nullable = false)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @NotNull(message = "Password cannot be null")
     @Column(name = "password_hash", nullable = false)
     private String password;
 

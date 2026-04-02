@@ -1,12 +1,13 @@
 package io.libry.controller;
 
-import io.libry.dto.TokenResponse;
-import io.libry.entity.Librarian;
+import io.libry.dto.librarian.LibrarianRequest;
+import io.libry.dto.librarian.LibrarianResponse;
+import io.libry.dto.librarian.TokenResponse;
 import io.libry.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,10 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
     private final AuthService authService;
-
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     @Autowired
     public AuthController(AuthService authService) {
@@ -26,18 +24,21 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public Librarian register(@Valid @RequestBody Librarian librarian) {
-        librarian.setPassword(encoder.encode(librarian.getPassword()));
-        return authService.register(librarian);
+    public ResponseEntity<LibrarianResponse> register(@Valid @RequestBody LibrarianRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(authService.register(request));
     }
 
     @PostMapping("/login")
-    public TokenResponse login(@Valid @RequestBody Librarian librarian) {
-        return authService.verify(librarian);
+    public TokenResponse login(@Valid @RequestBody LibrarianRequest request) {
+        return authService.verify(request);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

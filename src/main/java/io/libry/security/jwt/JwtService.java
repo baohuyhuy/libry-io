@@ -1,9 +1,10 @@
-package io.libry.service;
+package io.libry.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JWTService {
+public class JwtService {
 
     @Value("${app.jwt.secret}")
     private String secretKey;
@@ -23,24 +24,26 @@ public class JWTService {
     @Value("${app.jwt.expiration}")
     private long expirationMs;
 
+    private SecretKey secretKeyObj;
+
     public String generateToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
+        Map<String, Object> extraClaims = new HashMap<>();
 
         return Jwts
                 .builder()
                 .claims()
-                .add(claims)
+                .add(extraClaims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .and()
-                .signWith(getKey())
+                .signWith(secretKeyObj)
                 .compact();
     }
 
-    private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    @PostConstruct
+    private void init() {
+        secretKeyObj = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
     public String extractUsername(String token) {
@@ -56,7 +59,7 @@ public class JWTService {
     private Claims extractAllClaims(String token) {
         return Jwts
                 .parser()
-                .verifyWith(getKey())
+                .verifyWith(secretKeyObj)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();

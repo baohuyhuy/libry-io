@@ -1,5 +1,6 @@
-package io.libry.entity;
+package io.libry.security.principal;
 
+import io.libry.entity.Librarian;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,10 +8,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
-public class LibrarianPrincipal implements UserDetails {
+public class UserDetailsImpl implements UserDetails {
     private final Librarian librarian;
 
-    public LibrarianPrincipal(Librarian librarian) {
+    public UserDetailsImpl(Librarian librarian) {
         this.librarian = librarian;
     }
 
@@ -27,25 +28,5 @@ public class LibrarianPrincipal implements UserDetails {
     @Override
     public String getUsername() {
         return librarian.getUsername();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
     }
 }

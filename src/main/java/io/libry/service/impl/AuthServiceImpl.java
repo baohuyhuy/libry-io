@@ -1,42 +1,50 @@
 package io.libry.service.impl;
 
-
-import io.libry.dto.TokenResponse;
+import io.libry.dto.librarian.LibrarianRequest;
+import io.libry.dto.librarian.LibrarianResponse;
+import io.libry.dto.librarian.TokenResponse;
 import io.libry.entity.Librarian;
+import io.libry.exception.ConflictException;
 import io.libry.repository.LibrarianRepository;
+import io.libry.security.jwt.JwtService;
 import io.libry.service.AuthService;
-import io.libry.service.JWTService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final LibrarianRepository librarianRepo;
 
     private final AuthenticationManager authManager;
 
-    private final JWTService jwtService;
+    private final JwtService jwtService;
 
-    @Autowired
-    public AuthServiceImpl(AuthenticationManager authManager, JWTService jwtService, LibrarianRepository librarianRepo) {
-        this.authManager = authManager;
-        this.jwtService = jwtService;
-        this.librarianRepo = librarianRepo;
-    }
+    private final PasswordEncoder encoder;
 
     @Override
-    public Librarian register(Librarian librarian) {
-        return librarianRepo.save(librarian);
+    public LibrarianResponse register(LibrarianRequest request) {
+        if (librarianRepo.existsByUsername(request.username())) {
+            throw new ConflictException("Username already exists");
+        }
+        Librarian newLibrarian = new Librarian();
+        newLibrarian.setUsername(request.username());
+        newLibrarian.setPassword(encoder.encode(request.password()));
+
+        return LibrarianResponse.from(librarianRepo.save(newLibrarian));
     }
 
 
     @Override
-    public TokenResponse verify(Librarian librarian) {
+    public TokenResponse verify(LibrarianRequest request) {
         authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(librarian.getUsername(), librarian.getPassword()));
-        return new TokenResponse(jwtService.generateToken(librarian.getUsername()));
+                new UsernamePasswordAuthenticationToken(
+                        request.username(),
+                        request.password()));
+        return new TokenResponse(jwtService.generateToken(request.username()));
     }
 }

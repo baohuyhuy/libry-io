@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
-import io.libry.service.JWTService;
+import io.libry.security.JwtAuthEntryPoint;
+import io.libry.security.jwt.JwtService;
+import io.libry.security.principal.UserDetailsServiceImpl;
 import io.libry.service.ReaderService;
-import io.libry.service.impl.LibrarianDetailsServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ReaderController.class)
+@WebMvcTest(value = ReaderController.class, excludeAutoConfiguration = UserDetailsServiceAutoConfiguration.class)
 @WithMockUser
 class ReaderControllerTest {
 
@@ -43,10 +45,13 @@ class ReaderControllerTest {
     private ReaderService readerService;
 
     @MockitoBean
-    private JWTService jwtService;
+    private JwtService jwtService;
 
     @MockitoBean
-    private LibrarianDetailsServiceImpl librarianDetailsService;
+    private UserDetailsServiceImpl librarianDetailsService;
+
+    @MockitoBean
+    private JwtAuthEntryPoint jwtAuthEntryPoint;
 
     private ReaderResponse readerResponse;
 
@@ -61,7 +66,9 @@ class ReaderControllerTest {
                 "thomas@example.com",
                 null,
                 LocalDate.now(),
-                LocalDate.now().plusYears(2),
+                LocalDate
+                        .now()
+                        .plusYears(2),
                 null
         );
     }
