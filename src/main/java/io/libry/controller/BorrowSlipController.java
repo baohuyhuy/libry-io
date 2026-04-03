@@ -1,7 +1,9 @@
 package io.libry.controller;
 
-import io.libry.dto.borrow.slip.BorrowSlipRequest;
-import io.libry.dto.borrow.slip.BorrowSlipResponse;
+import io.libry.dto.slip.BorrowSlipRequest;
+import io.libry.dto.slip.BorrowSlipResponse;
+import io.libry.dto.slip.ReturnSlipRequest;
+import io.libry.dto.slip.ReturnSlipResponse;
 import io.libry.entity.BorrowSlip;
 import io.libry.service.BorrowSlipService;
 import jakarta.validation.Valid;
@@ -42,5 +44,10 @@ public class BorrowSlipController {
     @GetMapping
     public ResponseEntity<List<BorrowSlipResponse>> getAllBorrowSlips() {
         return ResponseEntity.ok(borrowSlipService.getAllBorrowSlips());
+    }
+
+    @PatchMapping("/{id}/return")
+    public ResponseEntity<ReturnSlipResponse> returnSlip(@PathVariable("id") Long slipId, @Valid @RequestBody ReturnSlipRequest request) {
+        return ResponseEntity.ok(borrowSlipService.returnSlip(slipId, request));
     }
 }

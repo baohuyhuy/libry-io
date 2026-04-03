@@ -1,7 +1,9 @@
 package io.libry.service.impl;
 
-import io.libry.dto.borrow.slip.BorrowSlipRequest;
-import io.libry.dto.borrow.slip.BorrowSlipResponse;
+import io.libry.dto.slip.BorrowSlipRequest;
+import io.libry.dto.slip.BorrowSlipResponse;
+import io.libry.dto.slip.ReturnSlipRequest;
+import io.libry.dto.slip.ReturnSlipResponse;
 import io.libry.entity.*;
 import io.libry.exception.ConflictException;
 import io.libry.exception.ResourceNotFoundException;
@@ -15,10 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -113,5 +118,107 @@ public class BorrowSlipServiceImpl implements BorrowSlipService {
                 .stream()
                 .map(BorrowSlipResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    @Override
+    public ReturnSlipResponse returnSlip(Long slipId, ReturnSlipRequest request) {
+        log.info("Returning borrow slip: slipId={}, lostBookIds={}", slipId, request.lostBookIds());
+
+        // Validate book IDs are unique within the request
+        List<Long> lostBookIds = request.lostBookIds();
+        if (lostBookIds.size() != new HashSet<>(lostBookIds).size()) {
+            throw new IllegalArgumentException("Duplicate book IDs in lostBookIds");
+        }
+
+        // Load the slip by ID
+        BorrowSlip slip = borrowSlipRepository
+                .findByIdWithDetails(slipId)
+                .orElseThrow(() -> new ResourceNotFoundException("Borrow slip with id " + slipId + " not found"));
+
+        // Validate the slip hasn't already been returned
+        if (slip.getActualReturnDate() != null) {
+            throw new UnprocessableEntityException("Borrow slip has already been returned");
+        }
+
+        // Validate all lostBookIds belong to this slip
+        for (Long lostBookId : lostBookIds) {
+            boolean found = slip
+                    .getBorrowSlipBooks()
+                    .stream()
+                    .anyMatch(sb -> sb
+                            .getBook()
+                            .getBookId()
+                            .equals(lostBookId));
+            if (!found) {
+                throw new IllegalArgumentException("Lost book ID " + lostBookId + " does not belong to this borrow slip");
+            }
+        }
+
+        // Update the actualReturnDate
+        slip.setActualReturnDate(LocalDate.now());
+
+        // Update lost status and Increment quantity for returned books
+        List<BorrowSlipBook> lostBooks = new ArrayList<>();
+        Set<Long> lostBookIdSet = new HashSet<>(lostBookIds);
+        for (BorrowSlipBook slipBook : slip.getBorrowSlipBooks()) {
+            if (lostBookIdSet.contains(slipBook
+                    .getBook()
+                    .getBookId())) {
+                slipBook.setLost(true);
+                lostBooks.add(slipBook);
+            } else {
+                slipBook
+                        .getBook()
+                        .setQuantity(slipBook
+                                .getBook()
+                                .getQuantity() + 1);
+            }
+        }
+
+        // Calculate fines
+        long overdueDays = ChronoUnit.DAYS.between(slip.getExpectedReturnDate(), slip.getActualReturnDate());
+        overdueDays = Math.max(overdueDays, 0); // negative means returned early
+
+        BigDecimal overdueFine =
+                BigDecimal
+                        .valueOf(overdueDays)
+                        .multiply(BigDecimal.valueOf(5_000)); // 5.000vnd per day
+
+
+        List<ReturnSlipResponse.LostBookFine> lostBookFines = lostBooks
+                .stream()
+                .map(sb -> {
+                    Book book = sb.getBook();
+                    return new ReturnSlipResponse.LostBookFine(
+                            book.getBookId(),
+                            book.getTitle(),
+                            book
+                                    .getPrice()
+                                    .multiply(BigDecimal.valueOf(2)) // 200%
+                    );
+                })
+                .toList();
+
+        BigDecimal lostFineTotal = lostBookFines
+                .stream()
+                .map(ReturnSlipResponse.LostBookFine::fine)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalFine = overdueFine.add(lostFineTotal);
+
+        log.info("Borrow slip returned: slipId={}, overdueDays={}, overdueFine={}, lostBookFines={}, totalFine={}",
+                slipId, overdueDays, overdueFine, lostBookFines, totalFine);
+
+        return new ReturnSlipResponse(
+                slip.getSlipId(),
+                slip.getBorrowDate(),
+                slip.getExpectedReturnDate(),
+                slip.getActualReturnDate(),
+                overdueDays,
+                overdueFine,
+                lostBookFines,
+                totalFine
+        );
     }
 }
