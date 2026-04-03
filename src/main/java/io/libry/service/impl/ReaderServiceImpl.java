@@ -9,6 +9,7 @@ import io.libry.service.ReaderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class ReaderServiceImpl implements ReaderService {
                 .toList();
     }
 
+    @Transactional
     @Override
     public ReaderResponse createReader(ReaderRequest request) {
         Reader newReader = new Reader();
@@ -35,6 +37,7 @@ public class ReaderServiceImpl implements ReaderService {
         return ReaderResponse.from(readerRepository.save(newReader));
     }
 
+    @Transactional
     @Override
     public void putReader(Long readerId, ReaderRequest request) {
         Reader existingReader = readerRepository
@@ -46,6 +49,7 @@ public class ReaderServiceImpl implements ReaderService {
         readerRepository.save(existingReader);
     }
 
+    @Transactional
     @Override
     public void patchReader(Long readerId, PatchReaderRequest request) {
         Reader existingReader = readerRepository
@@ -77,6 +81,7 @@ public class ReaderServiceImpl implements ReaderService {
         readerRepository.save(existingReader);
     }
 
+    @Transactional
     @Override
     public void deleteReader(Long readerId) {
         if (!readerRepository.existsById(readerId)) {
