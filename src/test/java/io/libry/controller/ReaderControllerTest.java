@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
+import io.libry.exception.ResourceNotFoundException;
 import io.libry.security.JwtAuthEntryPoint;
 import io.libry.security.jwt.JwtService;
 import io.libry.security.principal.UserDetailsServiceImpl;
@@ -13,12 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -111,7 +110,7 @@ class ReaderControllerTest {
     @Test
     void findById_returns404_whenNotFound() throws Exception {
         when(readerService.findById(99L))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .thenThrow(new ResourceNotFoundException("Reader with id 99 not found"));
 
         mockMvc
                 .perform(get("/api/readers/99"))
@@ -240,7 +239,7 @@ class ReaderControllerTest {
 
     @Test
     void putReader_returns404_whenNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
+        doThrow(new ResourceNotFoundException("Reader with id 99 not found"))
                 .when(readerService)
                 .putReader(eq(99L), any(ReaderRequest.class));
 
@@ -336,7 +335,7 @@ class ReaderControllerTest {
 
     @Test
     void deleteReader_returns404_whenNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
+        doThrow(new ResourceNotFoundException("Reader with id 99 not found"))
                 .when(readerService)
                 .deleteReader(99L);
 
@@ -360,7 +359,7 @@ class ReaderControllerTest {
     @Test
     void search_byIdCardNumber_returns404_whenNotFound() throws Exception {
         when(readerService.findByIdCardNumber("000"))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .thenThrow(new ResourceNotFoundException("Reader with id card number 000 not found"));
 
         mockMvc
                 .perform(get("/api/readers/search").param("id_card_number", "000"))

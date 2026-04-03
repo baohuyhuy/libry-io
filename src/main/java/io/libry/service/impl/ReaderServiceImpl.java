@@ -4,13 +4,12 @@ import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
 import io.libry.entity.Reader;
+import io.libry.exception.ResourceNotFoundException;
 import io.libry.repository.ReaderRepository;
 import io.libry.service.ReaderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class ReaderServiceImpl implements ReaderService {
     public void putReader(Long readerId, ReaderRequest request) {
         Reader existingReader = readerRepository
                 .findById(readerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Reader with id " + readerId + " not found"));
 
         populateReaderDetails(request, existingReader);
 
@@ -54,7 +53,7 @@ public class ReaderServiceImpl implements ReaderService {
     public void patchReader(Long readerId, PatchReaderRequest request) {
         Reader existingReader = readerRepository
                 .findById(readerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Reader with id " + readerId + " not found"));
 
         if (request.fullName() != null) {
             existingReader.setFullName(request.fullName());
@@ -85,7 +84,7 @@ public class ReaderServiceImpl implements ReaderService {
     @Override
     public void deleteReader(Long readerId) {
         if (!readerRepository.existsById(readerId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResourceNotFoundException("Reader with id " + readerId + " not found");
         }
         readerRepository.deleteById(readerId);
     }
@@ -95,7 +94,7 @@ public class ReaderServiceImpl implements ReaderService {
         return readerRepository
                 .findById(readerId)
                 .map(ReaderResponse::from)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Reader with id " + readerId + " not found"));
     }
 
     @Override
@@ -103,7 +102,7 @@ public class ReaderServiceImpl implements ReaderService {
         return readerRepository
                 .findByIdCardNumber(idCardNumber)
                 .map(ReaderResponse::from)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Reader with id card number " + idCardNumber + " not found"));
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
 import io.libry.dto.book.BookRequest;
+import io.libry.exception.ResourceNotFoundException;
 import io.libry.security.JwtAuthEntryPoint;
 import io.libry.security.jwt.JwtService;
 import io.libry.security.principal.UserDetailsServiceImpl;
@@ -13,12 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -111,7 +110,7 @@ class BookControllerTest {
     @Test
     void getBookById_returns404_whenNotFound() throws Exception {
         when(bookService.findById(99L))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .thenThrow(new ResourceNotFoundException("Book with id 99 not found"));
 
         mockMvc
                 .perform(get("/api/books/99"))
@@ -281,7 +280,7 @@ class BookControllerTest {
 
     @Test
     void putBook_returns404_whenNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
+        doThrow(new ResourceNotFoundException("Book with id 99 not found"))
                 .when(bookService).putBook(eq(99L), any(BookRequest.class));
 
         String body = """
@@ -369,7 +368,7 @@ class BookControllerTest {
 
     @Test
     void deleteBook_returns404_whenNotFound() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND))
+        doThrow(new ResourceNotFoundException("Book with id 99 not found"))
                 .when(bookService).deleteBook(99L);
 
         mockMvc
@@ -392,7 +391,7 @@ class BookControllerTest {
     @Test
     void search_byIsbn_returns404_whenNotFound() throws Exception {
         when(bookService.findByIsbn("0000000000000"))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .thenThrow(new ResourceNotFoundException("Book with ISBN 0000000000000 not found"));
 
         mockMvc
                 .perform(get("/api/books/search").param("isbn", "0000000000000"))
