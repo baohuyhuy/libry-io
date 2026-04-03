@@ -73,14 +73,14 @@ class ReaderControllerTest {
         );
     }
 
-    // --- GET /api/readers/ ---
+    // --- GET /api/readers ---
 
     @Test
     void getAllReaders_returns200WithList() throws Exception {
         when(readerService.getAllReaders()).thenReturn(List.of(readerResponse));
 
         mockMvc
-                .perform(get("/api/readers/"))
+                .perform(get("/api/readers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].full_name").value("Thomas Shelby"))
                 .andExpect(jsonPath("$[0].id_card_number").value("84839281423"));
@@ -91,7 +91,7 @@ class ReaderControllerTest {
         when(readerService.getAllReaders()).thenReturn(List.of());
 
         mockMvc
-                .perform(get("/api/readers/"))
+                .perform(get("/api/readers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
     }
@@ -126,7 +126,7 @@ class ReaderControllerTest {
                 .andExpect(jsonPath("$.error").exists());
     }
 
-    // --- POST /api/readers/ ---
+    // --- POST /api/readers ---
 
     @Test
     void createReader_returns201_whenValid() throws Exception {
@@ -144,7 +144,7 @@ class ReaderControllerTest {
                 .plusYears(2));
 
         mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -160,7 +160,7 @@ class ReaderControllerTest {
                 """;
 
         mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -184,7 +184,7 @@ class ReaderControllerTest {
                 .plusYears(2));
 
         mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -203,7 +203,7 @@ class ReaderControllerTest {
                 """;
 
         mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
