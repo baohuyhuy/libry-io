@@ -9,11 +9,13 @@ import io.libry.repository.LibrarianRepository;
 import io.libry.security.jwt.JwtService;
 import io.libry.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -28,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LibrarianResponse register(LibrarianRequest request) {
+        log.info("Registering new librarian: username={}", request.username());
         if (librarianRepo.existsByUsername(request.username())) {
             throw new ConflictException("Username already exists");
         }
@@ -35,16 +38,20 @@ public class AuthServiceImpl implements AuthService {
         newLibrarian.setUsername(request.username());
         newLibrarian.setPassword(encoder.encode(request.password()));
 
-        return LibrarianResponse.from(librarianRepo.save(newLibrarian));
+        LibrarianResponse response = LibrarianResponse.from(librarianRepo.save(newLibrarian));
+        log.info("Librarian registered successfully: username={}", request.username());
+        return response;
     }
 
 
     @Override
     public TokenResponse verify(LibrarianRequest request) {
+        log.info("Login attempt: username={}", request.username());
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.username(),
                         request.password()));
+        log.info("Login successful: username={}", request.username());
         return new TokenResponse(jwtService.generateToken(request.username()));
     }
 }
