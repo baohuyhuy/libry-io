@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -92,30 +94,35 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(BadCredentialsException.class)
     public Map<String, String> handleBadCredentials(BadCredentialsException ex) {
+        log.warn("Failed login attempt: bad credentials");
         return Map.of("error", "Invalid username or password");
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
     public Map<String, String> handleNotFound(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
         return Map.of("error", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     @ExceptionHandler(UnprocessableEntityException.class)
     public Map<String, String> handleUnprocessableEntity(UnprocessableEntityException ex) {
+        log.warn("Unprocessable entity: {}", ex.getMessage());
         return Map.of("error", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(IllegalArgumentException.class)
     public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Illegal argument: {}", ex.getMessage());
         return Map.of("error", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(ConflictException.class)
     public Map<String, String> handleConflict(ConflictException ex) {
+        log.warn("Conflict: {}", ex.getMessage());
         return Map.of("error", ex.getMessage());
     }
 
@@ -123,6 +130,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Map<String, String> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         String message = ex.getMostSpecificCause().getMessage();
+        log.warn("Data integrity violation: {}", message);
 
         if (message.contains("id_card_number")) {
             return Map.of("id_card_number", "ID card number already exists");
@@ -135,5 +143,12 @@ public class GlobalExceptionHandler {
         }
 
         return Map.of("error", "A unique constraint was violated");
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(Exception.class)
+    public Map<String, String> handleUnexpected(Exception ex) {
+        log.error("Unexpected error", ex);
+        return Map.of("error", "An unexpected error occurred");
     }
 }

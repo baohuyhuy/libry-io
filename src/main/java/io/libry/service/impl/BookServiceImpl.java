@@ -8,11 +8,13 @@ import io.libry.exception.ResourceNotFoundException;
 import io.libry.repository.BookRepository;
 import io.libry.service.BookService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
@@ -30,17 +32,20 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Override
     public BookResponse createBook(BookRequest bookRequest) {
+        log.info("Creating book: isbn={}, title={}", bookRequest.isbn(), bookRequest.title());
         Book newBook = new Book();
 
         populateBookDetails(bookRequest, newBook);
 
         Book savedBook = bookRepository.save(newBook);
+        log.info("Book created: bookId={}, isbn={}", savedBook.getBookId(), savedBook.getIsbn());
         return BookResponse.from(savedBook);
     }
 
     @Transactional
     @Override
     public void putBook(Long bookId, BookRequest request) {
+        log.info("Replacing book: bookId={}", bookId);
         Book existingBook = bookRepository
                 .findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Book with id " + bookId + " not found"));
@@ -48,15 +53,18 @@ public class BookServiceImpl implements BookService {
         populateBookDetails(request, existingBook);
 
         bookRepository.save(existingBook);
+        log.info("Book replaced: bookId={}", bookId);
     }
 
     @Transactional
     @Override
     public void deleteBook(Long bookId) {
+        log.info("Deleting book: bookId={}", bookId);
         if (!bookRepository.existsById(bookId)) {
             throw new ResourceNotFoundException("Book with id " + bookId + " not found");
         }
         bookRepository.deleteById(bookId);
+        log.info("Book deleted: bookId={}", bookId);
     }
 
     @Override
@@ -87,6 +95,7 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Override
     public void patchBook(Long bookId, PatchBookRequest request) {
+        log.info("Patching book: bookId={}", bookId);
         Book existingBook = bookRepository
                 .findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Book with id " + bookId + " not found"));
@@ -117,6 +126,7 @@ public class BookServiceImpl implements BookService {
         }
 
         bookRepository.save(existingBook);
+        log.info("Book patched: bookId={}", bookId);
     }
 
     private void populateBookDetails(BookRequest request, Book existingBook) {

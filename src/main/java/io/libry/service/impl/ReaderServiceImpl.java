@@ -8,11 +8,13 @@ import io.libry.exception.ResourceNotFoundException;
 import io.libry.repository.ReaderRepository;
 import io.libry.service.ReaderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReaderServiceImpl implements ReaderService {
@@ -30,15 +32,19 @@ public class ReaderServiceImpl implements ReaderService {
     @Transactional
     @Override
     public ReaderResponse createReader(ReaderRequest request) {
+        log.info("Creating reader: email={}", request.email());
         Reader newReader = new Reader();
         populateReaderDetails(request, newReader);
 
-        return ReaderResponse.from(readerRepository.save(newReader));
+        ReaderResponse response = ReaderResponse.from(readerRepository.save(newReader));
+        log.info("Reader created: readerId={}, email={}", response.readerId(), request.email());
+        return response;
     }
 
     @Transactional
     @Override
     public void putReader(Long readerId, ReaderRequest request) {
+        log.info("Replacing reader: readerId={}", readerId);
         Reader existingReader = readerRepository
                 .findById(readerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reader with id " + readerId + " not found"));
@@ -46,11 +52,13 @@ public class ReaderServiceImpl implements ReaderService {
         populateReaderDetails(request, existingReader);
 
         readerRepository.save(existingReader);
+        log.info("Reader replaced: readerId={}", readerId);
     }
 
     @Transactional
     @Override
     public void patchReader(Long readerId, PatchReaderRequest request) {
+        log.info("Patching reader: readerId={}", readerId);
         Reader existingReader = readerRepository
                 .findById(readerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Reader with id " + readerId + " not found"));
@@ -78,15 +86,18 @@ public class ReaderServiceImpl implements ReaderService {
         }
 
         readerRepository.save(existingReader);
+        log.info("Reader patched: readerId={}", readerId);
     }
 
     @Transactional
     @Override
     public void deleteReader(Long readerId) {
+        log.info("Deleting reader: readerId={}", readerId);
         if (!readerRepository.existsById(readerId)) {
             throw new ResourceNotFoundException("Reader with id " + readerId + " not found");
         }
         readerRepository.deleteById(readerId);
+        log.info("Reader deleted: readerId={}", readerId);
     }
 
     @Override
