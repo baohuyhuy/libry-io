@@ -1,4 +1,4 @@
-package io.libry.dto.borrow.slip;
+package io.libry.dto.slip;
 
 import io.libry.entity.Book;
 import io.libry.entity.BorrowSlip;

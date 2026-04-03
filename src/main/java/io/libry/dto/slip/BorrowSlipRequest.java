@@ -1,4 +1,4 @@
-package io.libry.dto.borrow.slip;
+package io.libry.dto.slip;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
