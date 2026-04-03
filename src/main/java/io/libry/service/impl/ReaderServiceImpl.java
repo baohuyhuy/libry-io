@@ -6,6 +6,7 @@ import io.libry.dto.reader.ReaderResponse;
 import io.libry.entity.Reader;
 import io.libry.repository.ReaderRepository;
 import io.libry.service.ReaderService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,12 +14,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ReaderServiceImpl implements ReaderService {
     private final ReaderRepository readerRepository;
-
-    public ReaderServiceImpl(ReaderRepository readerRepository) {
-        this.readerRepository = readerRepository;
-    }
 
     @Override
     public List<ReaderResponse> getAllReaders() {

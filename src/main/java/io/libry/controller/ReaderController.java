@@ -22,7 +22,7 @@ public class ReaderController {
         this.readerService = readerService;
     }
 
-    @GetMapping("/")
+    @GetMapping
     public List<ReaderResponse> getAllReaders() {
         return readerService.getAllReaders();
     }
@@ -51,7 +51,7 @@ public class ReaderController {
                 .body(Map.of("error", "Provide at least one search parameter: id_card_number or full_name"));
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Void> createReader(@Valid @RequestBody ReaderRequest newReader) {
         ReaderResponse reader = readerService.createReader(newReader);
 
