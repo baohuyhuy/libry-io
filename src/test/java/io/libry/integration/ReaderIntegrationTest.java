@@ -84,7 +84,7 @@ class ReaderIntegrationTest {
                 .token();
     }
 
-    // --- POST /api/readers/ ---
+    // --- POST /api/readers ---
 
     @Test
     void createReader_returns201_andCanBeRetrieved() throws Exception {
@@ -98,7 +98,7 @@ class ReaderIntegrationTest {
                 """.formatted(pastDate, futureDate);
 
         String location = mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -126,7 +126,7 @@ class ReaderIntegrationTest {
                 """;
 
         mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,14 +147,14 @@ class ReaderIntegrationTest {
                 }
                 """.formatted(pastDate, futureDate);
 
-        mockMvc.perform(post("/api/readers/")
+        mockMvc.perform(post("/api/readers")
                 .with(csrf())
                 .header("Authorization", jwtToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body));
 
         mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -163,7 +163,7 @@ class ReaderIntegrationTest {
                 .andExpect(jsonPath("$.id_card_number").exists());
     }
 
-    // --- GET /api/readers/ ---
+    // --- GET /api/readers ---
 
     @Test
     void getAllReaders_returns200WithList() throws Exception {
@@ -171,7 +171,7 @@ class ReaderIntegrationTest {
         createTestReader("Arthur Shelby", "22222222222");
 
         mockMvc
-                .perform(get("/api/readers/").header("Authorization", jwtToken))
+                .perform(get("/api/readers").header("Authorization", jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
     }
@@ -346,7 +346,7 @@ class ReaderIntegrationTest {
     @Test
     void anyEndpoint_returns401_whenNoToken() throws Exception {
         mockMvc
-                .perform(get("/api/readers/"))
+                .perform(get("/api/readers"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -363,7 +363,7 @@ class ReaderIntegrationTest {
                 """.formatted(fullName, idCardNumber, pastDate, futureDate);
 
         String location = mockMvc
-                .perform(post("/api/readers/")
+                .perform(post("/api/readers")
                         .with(csrf())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
