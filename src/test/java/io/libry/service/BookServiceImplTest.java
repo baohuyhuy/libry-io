@@ -4,6 +4,7 @@ import io.libry.dto.book.BookRequest;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
 import io.libry.entity.Book;
+import io.libry.exception.ResourceNotFoundException;
 import io.libry.repository.BookRepository;
 import io.libry.service.impl.BookServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -105,8 +105,8 @@ class BookServiceImplTest {
         when(bookRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.findById(99L))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
     }
 
     // --- findByIsbn ---
@@ -125,8 +125,8 @@ class BookServiceImplTest {
         when(bookRepository.findByIsbn("0000000000000")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.findByIsbn("0000000000000"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("0000000000000");
     }
 
     // --- findByTitle ---
@@ -179,8 +179,8 @@ class BookServiceImplTest {
         when(bookRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.putBook(99L, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
         verify(bookRepository, never()).save(any());
     }
 
@@ -210,8 +210,8 @@ class BookServiceImplTest {
         when(bookRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.patchBook(99L, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
         verify(bookRepository, never()).save(any());
     }
 
@@ -231,8 +231,8 @@ class BookServiceImplTest {
         when(bookRepository.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> bookService.deleteBook(99L))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
         verify(bookRepository, never()).deleteById(any());
     }
 }

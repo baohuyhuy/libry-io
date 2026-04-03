@@ -95,6 +95,24 @@ public class GlobalExceptionHandler {
         return Map.of("error", "Invalid username or password");
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public Map<String, String> handleNotFound(ResourceNotFoundException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ExceptionHandler(UnprocessableEntityException.class)
+    public Map<String, String> handleUnprocessableEntity(UnprocessableEntityException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(ConflictException.class)
     public Map<String, String> handleConflict(ConflictException ex) {

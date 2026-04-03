@@ -4,13 +4,12 @@ import io.libry.dto.book.BookRequest;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
 import io.libry.entity.Book;
+import io.libry.exception.ResourceNotFoundException;
 import io.libry.repository.BookRepository;
 import io.libry.service.BookService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -44,7 +43,7 @@ public class BookServiceImpl implements BookService {
     public void putBook(Long bookId, BookRequest request) {
         Book existingBook = bookRepository
                 .findById(bookId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Book with id " + bookId + " not found"));
 
         populateBookDetails(request, existingBook);
 
@@ -55,7 +54,7 @@ public class BookServiceImpl implements BookService {
     @Override
     public void deleteBook(Long bookId) {
         if (!bookRepository.existsById(bookId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResourceNotFoundException("Book with id " + bookId + " not found");
         }
         bookRepository.deleteById(bookId);
     }
@@ -65,7 +64,7 @@ public class BookServiceImpl implements BookService {
         return bookRepository
                 .findByIsbn(isbn)
                 .map(BookResponse::from)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Book with ISBN " + isbn + " not found"));
     }
 
     @Override
@@ -82,7 +81,7 @@ public class BookServiceImpl implements BookService {
         return bookRepository
                 .findById(bookId)
                 .map(BookResponse::from)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Book with id " + bookId + " not found"));
     }
 
     @Transactional
@@ -90,8 +89,8 @@ public class BookServiceImpl implements BookService {
     public void patchBook(Long bookId, PatchBookRequest request) {
         Book existingBook = bookRepository
                 .findById(bookId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Book with id " + bookId + " not found"));
+
         if (request.isbn() != null) {
             existingBook.setIsbn(request.isbn());
         }

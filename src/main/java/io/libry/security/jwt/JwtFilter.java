@@ -1,5 +1,7 @@
 package io.libry.security.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -37,25 +40,28 @@ public class JwtFilter extends OncePerRequestFilter {
             token = authHeader.substring(7);
             try {
                 username = jwtService.extractUsername(token);
-            } catch (Exception e) {
-                // invalid token — continue unauthenticated, let Security handle it
+            } catch (ExpiredJwtException e) {
+                request.setAttribute("jwt_error", "Token has expired");
+            } catch (JwtException e) {
+                request.setAttribute("jwt_error", "Invalid token");
             }
         }
 
-        if (username != null && SecurityContextHolder
-                .getContext()
-                .getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails,
-                                null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authToken);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (jwtService.validateToken(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails,
+                                    null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (UsernameNotFoundException e) {
+                request.setAttribute("jwt_error", "User not found");
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

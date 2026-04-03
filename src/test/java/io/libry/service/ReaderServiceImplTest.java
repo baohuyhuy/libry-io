@@ -4,6 +4,7 @@ import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
 import io.libry.entity.Reader;
+import io.libry.exception.ResourceNotFoundException;
 import io.libry.repository.ReaderRepository;
 import io.libry.service.impl.ReaderServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -105,8 +105,8 @@ class ReaderServiceImplTest {
         when(readerRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> readerService.findById(99L))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
     }
 
     // --- findByIdCardNumber ---
@@ -125,8 +125,8 @@ class ReaderServiceImplTest {
         when(readerRepository.findByIdCardNumber("000")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> readerService.findByIdCardNumber("000"))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("000");
     }
 
     // --- findByFullName ---
@@ -184,8 +184,8 @@ class ReaderServiceImplTest {
         when(readerRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> readerService.putReader(99L, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
         verify(readerRepository, never()).save(any());
     }
 
@@ -214,8 +214,8 @@ class ReaderServiceImplTest {
         when(readerRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> readerService.patchReader(99L, request))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
         verify(readerRepository, never()).save(any());
     }
 
@@ -235,8 +235,8 @@ class ReaderServiceImplTest {
         when(readerRepository.existsById(99L)).thenReturn(false);
 
         assertThatThrownBy(() -> readerService.deleteReader(99L))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("404");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
         verify(readerRepository, never()).deleteById(any());
     }
 }
