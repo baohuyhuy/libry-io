@@ -112,6 +112,9 @@ public class GlobalExceptionHandler {
         if (message.contains("email")) {
             return Map.of("email", "Email already exists");
         }
+        if (message.contains("isbn")) {
+            return Map.of("isbn", "ISBN already exists");
+        }
 
         return Map.of("error", "A unique constraint was violated");
     }
