@@ -3,6 +3,7 @@ package io.libry.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.libry.dto.librarian.TokenResponse;
 import io.libry.repository.BookRepository;
+import io.libry.repository.BorrowSlipRepository;
 import io.libry.repository.LibrarianRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class BookIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private BorrowSlipRepository borrowSlipRepository;
+
+    @Autowired
     private BookRepository bookRepository;
 
     @Autowired
@@ -38,6 +42,7 @@ class BookIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        borrowSlipRepository.deleteAll();
         bookRepository.deleteAll();
         librarianRepository.deleteAll();
 
