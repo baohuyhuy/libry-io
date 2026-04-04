@@ -1,5 +1,6 @@
 package io.libry.service;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.book.BookRequest;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
@@ -13,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -51,23 +55,29 @@ class BookServiceImplTest {
     // --- getAllBooks ---
 
     @Test
-    void getAllBooks_returnsAllBooks() {
-        when(bookRepository.findAll()).thenReturn(List.of(book));
+    void getAllBooks_returnsPaginatedBooks() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(bookRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(book), pageable, 1));
 
-        List<BookResponse> result = bookService.getAllBooks();
+        PaginatedResponse<BookResponse> result = bookService.getAllBooks(pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).isbn()).isEqualTo("9781593279509");
-        assertThat(result.get(0).title()).isEqualTo("Eloquent JavaScript");
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.data().get(0).isbn()).isEqualTo("9781593279509");
+        assertThat(result.data().get(0).title()).isEqualTo("Eloquent JavaScript");
+        assertThat(result.totalItems()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(1);
+        assertThat(result.currentPage()).isEqualTo(0);
     }
 
     @Test
-    void getAllBooks_returnsEmptyList_whenNoBooks() {
-        when(bookRepository.findAll()).thenReturn(List.of());
+    void getAllBooks_returnsEmptyPage_whenNoBooks() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(bookRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        List<BookResponse> result = bookService.getAllBooks();
+        PaginatedResponse<BookResponse> result = bookService.getAllBooks(pageable);
 
-        assertThat(result).isEmpty();
+        assertThat(result.data()).isEmpty();
+        assertThat(result.totalItems()).isEqualTo(0);
     }
 
     // --- createBook ---
@@ -132,22 +142,28 @@ class BookServiceImplTest {
     // --- findByTitle ---
 
     @Test
-    void findByTitle_returnsMatchingBooks() {
-        when(bookRepository.findByTitleContainingIgnoreCase("eloquent")).thenReturn(List.of(book));
+    void findByTitle_returnsPaginatedMatchingBooks() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(bookRepository.findByTitleContainingIgnoreCase("eloquent", pageable))
+                .thenReturn(new PageImpl<>(List.of(book), pageable, 1));
 
-        List<BookResponse> result = bookService.findByTitle("eloquent");
+        PaginatedResponse<BookResponse> result = bookService.findByTitle("eloquent", pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).title()).isEqualTo("Eloquent JavaScript");
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.data().get(0).title()).isEqualTo("Eloquent JavaScript");
+        assertThat(result.totalItems()).isEqualTo(1);
     }
 
     @Test
-    void findByTitle_returnsEmptyList_whenNoMatch() {
-        when(bookRepository.findByTitleContainingIgnoreCase("xyz")).thenReturn(List.of());
+    void findByTitle_returnsEmptyPage_whenNoMatch() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(bookRepository.findByTitleContainingIgnoreCase("xyz", pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        List<BookResponse> result = bookService.findByTitle("xyz");
+        PaginatedResponse<BookResponse> result = bookService.findByTitle("xyz", pageable);
 
-        assertThat(result).isEmpty();
+        assertThat(result.data()).isEmpty();
+        assertThat(result.totalItems()).isEqualTo(0);
     }
 
     // --- putBook ---

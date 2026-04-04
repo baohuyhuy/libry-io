@@ -1,17 +1,18 @@
 package io.libry.controller;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.book.BookRequest;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
 import io.libry.service.BookService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/books")
@@ -23,8 +24,9 @@ public class BookController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BookResponse>> getAllBooks() {
-        return ResponseEntity.ok(bookService.getAllBooks());
+    public ResponseEntity<PaginatedResponse<BookResponse>> getAllBooks(
+            @PageableDefault(sort = "title") Pageable pageable) {
+        return ResponseEntity.ok(bookService.getAllBooks(pageable));
     }
 
     @GetMapping("/{id}")
@@ -76,20 +78,17 @@ public class BookController {
     @GetMapping("/search")
     public ResponseEntity<?> search(
             @RequestParam(value = "isbn", required = false) String isbn,
-            @RequestParam(value = "title", required = false) String title) {
+            @RequestParam(value = "title", required = false) String title,
+            @PageableDefault(sort = "title") Pageable pageable) {
         if (isbn != null && title != null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("error", "Only one search parameter is allowed at a time"));
+            throw new IllegalArgumentException("Only one search parameter is allowed at a time");
         }
         if (isbn != null) {
             return ResponseEntity.ok(bookService.findByIsbn(isbn));
         }
         if (title != null) {
-            return ResponseEntity.ok(bookService.findByTitle(title));
+            return ResponseEntity.ok(bookService.findByTitle(title, pageable));
         }
-        return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", "Provide at least one search parameter: isbn or title"));
+        throw new IllegalArgumentException("Provide at least one search parameter: isbn or title");
     }
 }

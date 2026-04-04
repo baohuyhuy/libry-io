@@ -1,6 +1,7 @@
 package io.libry.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
 import io.libry.dto.book.BookRequest;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -74,24 +76,32 @@ class BookControllerTest {
     // --- GET /api/books ---
 
     @Test
-    void getAllBooks_returns200WithList() throws Exception {
-        when(bookService.getAllBooks()).thenReturn(List.of(bookResponse));
+    void getAllBooks_returns200WithPagedResponse() throws Exception {
+        PaginatedResponse<BookResponse> pagedResponse = new PaginatedResponse<>(
+                List.of(bookResponse), 0, 1, 1, 10, false, false);
+        when(bookService.getAllBooks(any(Pageable.class))).thenReturn(pagedResponse);
 
         mockMvc
                 .perform(get("/api/books"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].isbn").value("9781593279509"))
-                .andExpect(jsonPath("$[0].title").value("Eloquent JavaScript"));
+                .andExpect(jsonPath("$.data[0].isbn").value("9781593279509"))
+                .andExpect(jsonPath("$.data[0].title").value("Eloquent JavaScript"))
+                .andExpect(jsonPath("$.total_items").value(1))
+                .andExpect(jsonPath("$.total_pages").value(1))
+                .andExpect(jsonPath("$.current_page").value(0));
     }
 
     @Test
-    void getAllBooks_returns200WithEmptyList() throws Exception {
-        when(bookService.getAllBooks()).thenReturn(List.of());
+    void getAllBooks_returns200WithEmptyPage_whenNoBooks() throws Exception {
+        PaginatedResponse<BookResponse> emptyPage = new PaginatedResponse<>(
+                List.of(), 0, 0, 0, 10, false, false);
+        when(bookService.getAllBooks(any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc
                 .perform(get("/api/books"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.total_items").value(0));
     }
 
     // --- GET /api/books/{id} ---
@@ -400,12 +410,15 @@ class BookControllerTest {
 
     @Test
     void search_byTitle_returns200WithMatches() throws Exception {
-        when(bookService.findByTitle("eloquent")).thenReturn(List.of(bookResponse));
+        PaginatedResponse<BookResponse> pagedResponse = new PaginatedResponse<>(
+                List.of(bookResponse), 0, 1, 1, 10, false, false);
+        when(bookService.findByTitle(eq("eloquent"), any(Pageable.class))).thenReturn(pagedResponse);
 
         mockMvc
                 .perform(get("/api/books/search").param("title", "eloquent"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Eloquent JavaScript"));
+                .andExpect(jsonPath("$.data[0].title").value("Eloquent JavaScript"))
+                .andExpect(jsonPath("$.total_items").value(1));
     }
 
     @Test
