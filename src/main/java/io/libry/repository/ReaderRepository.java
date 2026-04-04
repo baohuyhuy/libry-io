@@ -1,6 +1,8 @@
 package io.libry.repository;
 
 import io.libry.entity.Reader;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -10,7 +12,7 @@ import java.util.Optional;
 public interface ReaderRepository extends JpaRepository<Reader, Long> {
     Optional<Reader> findByIdCardNumber(String idCardNumber);
 
-    List<Reader> findByFullNameContainingIgnoreCase(String fullName);
+    Page<Reader> findByFullNameContainingIgnoreCase(String fullName, Pageable pageable);
 
     @Query("SELECT COUNT(r) FROM Reader r WHERE r.expiryDate >= CURRENT_DATE")
     long countActiveReaders();

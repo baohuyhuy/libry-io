@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -117,6 +118,14 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
         log.warn("Illegal argument: {}", ex.getMessage());
         return Map.of("error", ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(PropertyReferenceException.class)
+    public Map<String, String> handleInvalidSortField(PropertyReferenceException ex) {
+        String field = SNAKE_CASE.translate(ex.getPropertyName());
+        log.warn("Invalid sort field: {}", ex.getPropertyName());
+        return Map.of("error", "Invalid sort field: " + field);
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)

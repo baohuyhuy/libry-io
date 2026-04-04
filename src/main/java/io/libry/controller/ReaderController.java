@@ -1,17 +1,18 @@
 package io.libry.controller;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
 import io.libry.service.ReaderService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/readers")
@@ -23,8 +24,9 @@ public class ReaderController {
     }
 
     @GetMapping
-    public List<ReaderResponse> getAllReaders() {
-        return readerService.getAllReaders();
+    public ResponseEntity<PaginatedResponse<ReaderResponse>> getAllReaders(
+            @PageableDefault(sort = "fullName") Pageable pageable) {
+        return ResponseEntity.ok(readerService.getAllReaders(pageable));
     }
 
     @GetMapping("/{id}")
@@ -34,21 +36,18 @@ public class ReaderController {
 
     @GetMapping("/search")
     public ResponseEntity<?> search(@RequestParam(value = "id_card_number", required = false) String idCardNumber,
-                                    @RequestParam(value = "full_name", required = false) String fullName) {
+                                    @RequestParam(value = "full_name", required = false) String fullName,
+                                    @PageableDefault(sort = "fullName") Pageable pageable) {
         if (idCardNumber != null && fullName != null) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(Map.of("error", "Only one search parameter is allowed at a time"));
+            throw new IllegalArgumentException("Only one search parameter is allowed at a time");
         }
         if (idCardNumber != null) {
             return ResponseEntity.ok(readerService.findByIdCardNumber(idCardNumber));
         }
         if (fullName != null) {
-            return ResponseEntity.ok(readerService.findByFullName(fullName));
+            return ResponseEntity.ok(readerService.findByFullName(fullName, pageable));
         }
-        return ResponseEntity
-                .badRequest()
-                .body(Map.of("error", "Provide at least one search parameter: id_card_number or full_name"));
+        throw new IllegalArgumentException("Provide at least one search parameter: id_card_number or full_name");
     }
 
     @PostMapping

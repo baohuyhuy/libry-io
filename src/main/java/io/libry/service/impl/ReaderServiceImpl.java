@@ -1,5 +1,6 @@
 package io.libry.service.impl;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
@@ -9,10 +10,9 @@ import io.libry.repository.ReaderRepository;
 import io.libry.service.ReaderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -21,12 +21,10 @@ public class ReaderServiceImpl implements ReaderService {
     private final ReaderRepository readerRepository;
 
     @Override
-    public List<ReaderResponse> getAllReaders() {
-        return readerRepository
-                .findAll()
-                .stream()
-                .map(ReaderResponse::from)
-                .toList();
+    public PaginatedResponse<ReaderResponse> getAllReaders(Pageable pageable) {
+        return PaginatedResponse.from(
+                readerRepository.findAll(pageable).map(ReaderResponse::from)
+        );
     }
 
     @Transactional
@@ -117,12 +115,10 @@ public class ReaderServiceImpl implements ReaderService {
     }
 
     @Override
-    public List<ReaderResponse> findByFullName(String fullName) {
-        return readerRepository
-                .findByFullNameContainingIgnoreCase(fullName)
-                .stream()
-                .map(ReaderResponse::from)
-                .toList();
+    public PaginatedResponse<ReaderResponse> findByFullName(String fullName, Pageable pageable) {
+        return PaginatedResponse.from(
+                readerRepository.findByFullNameContainingIgnoreCase(fullName, pageable).map(ReaderResponse::from)
+        );
     }
 
     static private void populateReaderDetails(ReaderRequest request,

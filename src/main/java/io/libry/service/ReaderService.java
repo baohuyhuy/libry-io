@@ -1,13 +1,13 @@
 package io.libry.service;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface ReaderService {
-    List<ReaderResponse> getAllReaders();
+    PaginatedResponse<ReaderResponse> getAllReaders(Pageable pageable);
 
     ReaderResponse createReader(ReaderRequest reader);
 
@@ -21,5 +21,5 @@ public interface ReaderService {
 
     ReaderResponse findByIdCardNumber(String idCardNumber);
 
-    List<ReaderResponse> findByFullName(String fullName);
+    PaginatedResponse<ReaderResponse> findByFullName(String fullName, Pageable pageable);
 }
