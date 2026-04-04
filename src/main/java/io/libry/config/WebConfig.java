@@ -19,18 +19,35 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(new SnakeCasePageableResolver());
+    private final PageableHandlerMethodArgumentResolver pageableResolver;
+
+    public WebConfig(PageableHandlerMethodArgumentResolver pageableResolver) {
+        this.pageableResolver = pageableResolver;
     }
 
-    static class SnakeCasePageableResolver extends PageableHandlerMethodArgumentResolver {
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        resolvers.add(new SnakeCasePageableResolver(pageableResolver));
+    }
+
+    static class SnakeCasePageableResolver implements HandlerMethodArgumentResolver {
+
+        private final PageableHandlerMethodArgumentResolver delegate;
+
+        SnakeCasePageableResolver(PageableHandlerMethodArgumentResolver delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public boolean supportsParameter(MethodParameter parameter) {
+            return delegate.supportsParameter(parameter);
+        }
 
         @Override
         public Pageable resolveArgument(MethodParameter methodParameter,
                                         ModelAndViewContainer mavContainer,
                                         NativeWebRequest webRequest,
-                                        WebDataBinderFactory binderFactory) {
+                                        WebDataBinderFactory binderFactory) throws Exception {
             HttpServletRequest raw = (HttpServletRequest) webRequest.getNativeRequest();
             HttpServletRequest wrapped = new HttpServletRequestWrapper(raw) {
                 @Override
@@ -45,12 +62,11 @@ public class WebConfig implements WebMvcConfigurer {
                                  .toArray(String[]::new);
                 }
             };
-            return super.resolveArgument(methodParameter, mavContainer,
+            return delegate.resolveArgument(methodParameter, mavContainer,
                     new ServletWebRequest(wrapped), binderFactory);
         }
 
         private static String translateSortParam(String value) {
-            // value is like "full_name,asc" or just "full_name"
             String[] parts = value.split(",", 2);
             parts[0] = snakeToCamel(parts[0].trim());
             return parts.length == 2 ? parts[0] + "," + parts[1] : parts[0];

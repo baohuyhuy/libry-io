@@ -174,7 +174,7 @@ class BookIntegrationTest {
         mockMvc
                 .perform(get("/api/books").header("Authorization", jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.data", hasSize(2)));
     }
 
     // --- GET /api/books/{id} ---
@@ -334,7 +334,7 @@ class BookIntegrationTest {
                         .param("title", "javascript")
                         .header("Authorization", jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.data", hasSize(2)));
     }
 
     @Test

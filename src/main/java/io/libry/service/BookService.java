@@ -1,14 +1,14 @@
 package io.libry.service;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.book.BookRequest;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
-
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 public interface BookService {
 
-    List<BookResponse> getAllBooks();
+    PaginatedResponse<BookResponse> getAllBooks(Pageable pageable);
 
     BookResponse createBook(BookRequest bookRequest);
 
@@ -18,7 +18,7 @@ public interface BookService {
 
     BookResponse findByIsbn(String isbn);
 
-    List<BookResponse> findByTitle(String title);
+    PaginatedResponse<BookResponse> findByTitle(String title, Pageable pageable);
 
     BookResponse findById(Long bookId);
 

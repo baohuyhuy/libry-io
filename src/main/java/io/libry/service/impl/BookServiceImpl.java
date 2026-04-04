@@ -1,5 +1,6 @@
 package io.libry.service.impl;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.book.BookRequest;
 import io.libry.dto.book.BookResponse;
 import io.libry.dto.book.PatchBookRequest;
@@ -9,10 +10,9 @@ import io.libry.repository.BookRepository;
 import io.libry.service.BookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -21,12 +21,10 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
 
     @Override
-    public List<BookResponse> getAllBooks() {
-        return bookRepository
-                .findAll()
-                .stream()
-                .map(BookResponse::from)
-                .toList();
+    public PaginatedResponse<BookResponse> getAllBooks(Pageable pageable) {
+        return PaginatedResponse.from(
+                bookRepository.findAll(pageable).map(BookResponse::from)
+        );
     }
 
     @Transactional
@@ -76,12 +74,10 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<BookResponse> findByTitle(String title) {
-        return bookRepository
-                .findByTitleContainingIgnoreCase(title)
-                .stream()
-                .map(BookResponse::from)
-                .toList();
+    public PaginatedResponse<BookResponse> findByTitle(String title, Pageable pageable) {
+        return PaginatedResponse.from(
+                bookRepository.findByTitleContainingIgnoreCase(title, pageable).map(BookResponse::from)
+        );
     }
 
     @Override
