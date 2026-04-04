@@ -30,6 +30,7 @@ public interface BorrowSlipRepository extends JpaRepository<BorrowSlip, Long> {
             "JOIN FETCH s.reader " +
             "JOIN FETCH s.borrowSlipBooks sb " +
             "JOIN FETCH sb.book " +
-            "WHERE s.actualReturnDate IS NULL AND s.expectedReturnDate < CURRENT_DATE")
+            "WHERE s.actualReturnDate IS NULL AND s.expectedReturnDate < CURRENT_DATE " +
+            "ORDER BY s.expectedReturnDate ASC")
     List<BorrowSlip> findAllOverdue();
 }
