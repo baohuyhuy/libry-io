@@ -13,4 +13,11 @@ public interface BorrowSlipRepository extends JpaRepository<BorrowSlip, Long> {
 
     @Query("SELECT s FROM BorrowSlip s JOIN FETCH s.reader JOIN FETCH s.borrowSlipBooks sb JOIN FETCH sb.book")
     List<BorrowSlip> findAllWithDetails();
+
+    @Query(
+            "SELECT COUNT(sb) FROM BorrowSlip s " +
+                    "JOIN s.borrowSlipBooks sb " +
+                    "WHERE s.actualReturnDate IS NULL AND sb.lost = false"
+    )
+    Long countBorrowSlipBooks();
 }
