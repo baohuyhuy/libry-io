@@ -1,6 +1,7 @@
 package io.libry.service.impl;
 
 import io.libry.dto.statistics.BookStatisticResponse;
+import io.libry.dto.statistics.OverdueReaderResponse;
 import io.libry.dto.statistics.ReaderStatisticsResponse;
 import io.libry.repository.BookRepository;
 import io.libry.repository.BorrowSlipRepository;
@@ -10,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -54,5 +57,40 @@ public class StatisticsServiceImpl implements StatisticsService {
                 .toList();
 
         return new ReaderStatisticsResponse(totalReaders, totalActiveReaders, byGender);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<OverdueReaderResponse> getOverdueReaders() {
+        return borrowSlipRepository
+                .findAllOverdue()
+                .stream()
+                .map(slip -> {
+                            long overdueDays = ChronoUnit.DAYS.between(slip.getExpectedReturnDate(), LocalDate.now());
+
+                            List<OverdueReaderResponse.OverdueBook> books = slip
+                                    .getBorrowSlipBooks()
+                                    .stream()
+                                    .filter(sb -> !sb.isLost())
+                                    .map(sb -> new OverdueReaderResponse.OverdueBook(
+                                            sb.getBook().getBookId(),
+                                            sb.getBook().getIsbn(),
+                                            sb.getBook().getTitle()
+                                    ))
+                                    .toList();
+
+                            return new OverdueReaderResponse(
+                                    slip.getReader().getReaderId(),
+                                    slip.getReader().getFullName(),
+                                    slip.getReader().getIdCardNumber(),
+                                    slip.getSlipId(),
+                                    slip.getBorrowDate(),
+                                    slip.getExpectedReturnDate(),
+                                    overdueDays,
+                                    books
+                            );
+                        }
+                )
+                .toList();
     }
 }
