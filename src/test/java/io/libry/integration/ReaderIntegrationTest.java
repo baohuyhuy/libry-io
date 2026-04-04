@@ -2,6 +2,7 @@ package io.libry.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.libry.dto.librarian.TokenResponse;
+import io.libry.repository.BorrowSlipRepository;
 import io.libry.repository.LibrarianRepository;
 import io.libry.repository.ReaderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class ReaderIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private BorrowSlipRepository borrowSlipRepository;
+
+    @Autowired
     private ReaderRepository readerRepository;
 
     @Autowired
@@ -46,6 +50,8 @@ class ReaderIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        // delete children before parents to avoid FK constraint violations
+        borrowSlipRepository.deleteAll();
         readerRepository.deleteAll();
         librarianRepository.deleteAll();
 
