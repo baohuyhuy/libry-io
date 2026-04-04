@@ -179,7 +179,7 @@ class ReaderIntegrationTest {
         mockMvc
                 .perform(get("/api/readers").header("Authorization", jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.data", hasSize(2)));
     }
 
     // --- GET /api/readers/{id} ---
@@ -329,7 +329,7 @@ class ReaderIntegrationTest {
                         .param("full_name", "thomas")
                         .header("Authorization", jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.data", hasSize(2)));
     }
 
     @Test

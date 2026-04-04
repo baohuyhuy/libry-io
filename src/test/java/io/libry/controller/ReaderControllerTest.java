@@ -19,8 +19,12 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import io.libry.dto.PaginatedResponse;
+
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -75,24 +79,32 @@ class ReaderControllerTest {
     // --- GET /api/readers ---
 
     @Test
-    void getAllReaders_returns200WithList() throws Exception {
-        when(readerService.getAllReaders()).thenReturn(List.of(readerResponse));
+    void getAllReaders_returns200WithPagedResponse() throws Exception {
+        PaginatedResponse<ReaderResponse> pagedResponse = new PaginatedResponse<>(
+                List.of(readerResponse), 0, 1, 1, 10, false, false);
+        when(readerService.getAllReaders(any(Pageable.class))).thenReturn(pagedResponse);
 
         mockMvc
                 .perform(get("/api/readers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].full_name").value("Thomas Shelby"))
-                .andExpect(jsonPath("$[0].id_card_number").value("84839281423"));
+                .andExpect(jsonPath("$.data[0].full_name").value("Thomas Shelby"))
+                .andExpect(jsonPath("$.data[0].id_card_number").value("84839281423"))
+                .andExpect(jsonPath("$.total_items").value(1))
+                .andExpect(jsonPath("$.total_pages").value(1))
+                .andExpect(jsonPath("$.current_page").value(0));
     }
 
     @Test
-    void getAllReaders_returns200WithEmptyList() throws Exception {
-        when(readerService.getAllReaders()).thenReturn(List.of());
+    void getAllReaders_returns200WithEmptyPage_whenNoReaders() throws Exception {
+        PaginatedResponse<ReaderResponse> emptyPage = new PaginatedResponse<>(
+                List.of(), 0, 0, 0, 10, false, false);
+        when(readerService.getAllReaders(any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc
                 .perform(get("/api/readers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.total_items").value(0));
     }
 
     // --- GET /api/readers/{id} ---
@@ -368,22 +380,28 @@ class ReaderControllerTest {
 
     @Test
     void search_byFullName_returns200WithMatches() throws Exception {
-        when(readerService.findByFullName("thomas")).thenReturn(List.of(readerResponse));
+        PaginatedResponse<ReaderResponse> pagedResponse = new PaginatedResponse<>(
+                List.of(readerResponse), 0, 1, 1, 10, false, false);
+        when(readerService.findByFullName(eq("thomas"), any(Pageable.class))).thenReturn(pagedResponse);
 
         mockMvc
                 .perform(get("/api/readers/search").param("full_name", "thomas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].full_name").value("Thomas Shelby"));
+                .andExpect(jsonPath("$.data[0].full_name").value("Thomas Shelby"))
+                .andExpect(jsonPath("$.total_items").value(1));
     }
 
     @Test
-    void search_byFullName_returns200WithEmptyList_whenNoMatch() throws Exception {
-        when(readerService.findByFullName("xyz")).thenReturn(List.of());
+    void search_byFullName_returns200WithEmptyPage_whenNoMatch() throws Exception {
+        PaginatedResponse<ReaderResponse> emptyPage = new PaginatedResponse<>(
+                List.of(), 0, 0, 0, 10, false, false);
+        when(readerService.findByFullName(eq("xyz"), any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc
                 .perform(get("/api/readers/search").param("full_name", "xyz"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.total_items").value(0));
     }
 
     @Test

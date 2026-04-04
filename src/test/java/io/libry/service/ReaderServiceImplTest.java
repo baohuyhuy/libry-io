@@ -1,5 +1,6 @@
 package io.libry.service;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.reader.PatchReaderRequest;
 import io.libry.dto.reader.ReaderRequest;
 import io.libry.dto.reader.ReaderResponse;
@@ -13,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -50,23 +54,32 @@ class ReaderServiceImplTest {
     // --- getAllReaders ---
 
     @Test
-    void getAllReaders_returnsAllReaders() {
-        when(readerRepository.findAll()).thenReturn(List.of(reader));
+    void getAllReaders_returnsPaginatedReaders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(readerRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(reader), pageable, 1));
 
-        List<ReaderResponse> result = readerService.getAllReaders();
+        PaginatedResponse<ReaderResponse> result = readerService.getAllReaders(pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).fullName()).isEqualTo("Thomas Shelby");
-        assertThat(result.get(0).idCardNumber()).isEqualTo("84839281423");
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.data().get(0).fullName()).isEqualTo("Thomas Shelby");
+        assertThat(result.data().get(0).idCardNumber()).isEqualTo("84839281423");
+        assertThat(result.totalItems()).isEqualTo(1);
+        assertThat(result.totalPages()).isEqualTo(1);
+        assertThat(result.currentPage()).isEqualTo(0);
+        assertThat(result.hasNext()).isFalse();
+        assertThat(result.hasPrevious()).isFalse();
     }
 
     @Test
-    void getAllReaders_returnsEmptyList_whenNoReaders() {
-        when(readerRepository.findAll()).thenReturn(List.of());
+    void getAllReaders_returnsEmptyPage_whenNoReaders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(readerRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        List<ReaderResponse> result = readerService.getAllReaders();
+        PaginatedResponse<ReaderResponse> result = readerService.getAllReaders(pageable);
 
-        assertThat(result).isEmpty();
+        assertThat(result.data()).isEmpty();
+        assertThat(result.totalItems()).isEqualTo(0);
+        assertThat(result.totalPages()).isEqualTo(0);
     }
 
     // --- createReader ---
@@ -132,22 +145,28 @@ class ReaderServiceImplTest {
     // --- findByFullName ---
 
     @Test
-    void findByFullName_returnsMatchingReaders() {
-        when(readerRepository.findByFullNameContainingIgnoreCase("thomas")).thenReturn(List.of(reader));
+    void findByFullName_returnsPaginatedMatchingReaders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(readerRepository.findByFullNameContainingIgnoreCase("thomas", pageable))
+                .thenReturn(new PageImpl<>(List.of(reader), pageable, 1));
 
-        List<ReaderResponse> result = readerService.findByFullName("thomas");
+        PaginatedResponse<ReaderResponse> result = readerService.findByFullName("thomas", pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).fullName()).isEqualTo("Thomas Shelby");
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.data().get(0).fullName()).isEqualTo("Thomas Shelby");
+        assertThat(result.totalItems()).isEqualTo(1);
     }
 
     @Test
-    void findByFullName_returnsEmptyList_whenNoMatch() {
-        when(readerRepository.findByFullNameContainingIgnoreCase("xyz")).thenReturn(List.of());
+    void findByFullName_returnsEmptyPage_whenNoMatch() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(readerRepository.findByFullNameContainingIgnoreCase("xyz", pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        List<ReaderResponse> result = readerService.findByFullName("xyz");
+        PaginatedResponse<ReaderResponse> result = readerService.findByFullName("xyz", pageable);
 
-        assertThat(result).isEmpty();
+        assertThat(result.data()).isEmpty();
+        assertThat(result.totalItems()).isEqualTo(0);
     }
 
     // --- putReader ---
