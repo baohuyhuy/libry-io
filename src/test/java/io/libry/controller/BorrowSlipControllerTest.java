@@ -1,6 +1,7 @@
 package io.libry.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.slip.BorrowSlipResponse;
 import io.libry.dto.slip.ReturnSlipResponse;
 import io.libry.entity.BorrowSlip;
@@ -24,6 +25,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -204,24 +207,30 @@ class BorrowSlipControllerTest {
     // --- GET /api/borrow-slips ---
 
     @Test
-    void getAllBorrowSlips_returns200WithList() throws Exception {
-        when(borrowSlipService.getAllBorrowSlips()).thenReturn(List.of(borrowSlipResponse));
+    void getAllBorrowSlips_returns200WithPagedResponse() throws Exception {
+        PaginatedResponse<BorrowSlipResponse> pagedResponse = new PaginatedResponse<>(
+                List.of(borrowSlipResponse), 0, 1, 1, 5, false, false);
+        when(borrowSlipService.getAllBorrowSlips(any(Pageable.class))).thenReturn(pagedResponse);
 
         mockMvc
                 .perform(get("/api/borrow-slips"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].slip_id").value(1))
-                .andExpect(jsonPath("$[0].reader.full_name").value("James Walker"));
+                .andExpect(jsonPath("$.data[0].slip_id").value(1))
+                .andExpect(jsonPath("$.data[0].reader.full_name").value("James Walker"))
+                .andExpect(jsonPath("$.total_items").value(1));
     }
 
     @Test
-    void getAllBorrowSlips_returns200WithEmptyList() throws Exception {
-        when(borrowSlipService.getAllBorrowSlips()).thenReturn(List.of());
+    void getAllBorrowSlips_returns200WithEmptyPage() throws Exception {
+        PaginatedResponse<BorrowSlipResponse> emptyPage = new PaginatedResponse<>(
+                List.of(), 0, 0, 0, 5, false, false);
+        when(borrowSlipService.getAllBorrowSlips(any(Pageable.class))).thenReturn(emptyPage);
 
         mockMvc
                 .perform(get("/api/borrow-slips"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.total_items").value(0));
     }
 
     // --- PATCH /api/borrow-slips/{id}/return ---
