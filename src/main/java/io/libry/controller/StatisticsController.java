@@ -1,6 +1,7 @@
 package io.libry.controller;
 
 import io.libry.dto.statistics.BookStatisticResponse;
+import io.libry.dto.statistics.ReaderStatisticsResponse;
 import io.libry.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,5 +17,10 @@ public class StatisticsController {
     @GetMapping("/books")
     public BookStatisticResponse getBookStatistics() {
         return statService.getBookStatistics();
+    }
+
+    @GetMapping("/readers")
+    public ReaderStatisticsResponse getReaderStatistics() {
+        return statService.getReaderStatistics();
     }
 }
