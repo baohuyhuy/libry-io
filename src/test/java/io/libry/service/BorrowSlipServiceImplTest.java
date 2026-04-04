@@ -1,5 +1,6 @@
 package io.libry.service;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.slip.BorrowSlipRequest;
 import io.libry.dto.slip.BorrowSlipResponse;
 import io.libry.dto.slip.ReturnSlipRequest;
@@ -18,6 +19,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -193,23 +197,28 @@ class BorrowSlipServiceImplTest {
     // --- getAllBorrowSlips ---
 
     @Test
-    void getAllBorrowSlips_returnsList() {
+    void getAllBorrowSlips_returnsPaginatedList() {
+        Pageable pageable = PageRequest.of(0, 5);
         BorrowSlip slip = buildSlip(1L, reader, List.of(book1), LocalDate.now(), LocalDate.now().plusDays(7), null);
+        when(borrowSlipRepository.findPageOfIds(pageable)).thenReturn(new PageImpl<>(List.of(1L), pageable, 1));
+        when(borrowSlipRepository.findAllWithDetailsByIds(List.of(1L))).thenReturn(List.of(slip));
 
-        when(borrowSlipRepository.findAllWithDetails()).thenReturn(List.of(slip));
+        PaginatedResponse<BorrowSlipResponse> result = borrowSlipService.getAllBorrowSlips(pageable);
 
-        List<BorrowSlipResponse> result = borrowSlipService.getAllBorrowSlips();
-
-        assertThat(result).hasSize(1);
+        assertThat(result.data()).hasSize(1);
+        assertThat(result.totalItems()).isEqualTo(1);
+        assertThat(result.currentPage()).isEqualTo(0);
     }
 
     @Test
-    void getAllBorrowSlips_returnsEmptyList() {
-        when(borrowSlipRepository.findAllWithDetails()).thenReturn(List.of());
+    void getAllBorrowSlips_returnsEmptyPage() {
+        Pageable pageable = PageRequest.of(0, 5);
+        when(borrowSlipRepository.findPageOfIds(pageable)).thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
-        List<BorrowSlipResponse> result = borrowSlipService.getAllBorrowSlips();
+        PaginatedResponse<BorrowSlipResponse> result = borrowSlipService.getAllBorrowSlips(pageable);
 
-        assertThat(result).isEmpty();
+        assertThat(result.data()).isEmpty();
+        assertThat(result.totalItems()).isEqualTo(0);
     }
 
     // --- returnSlip ---

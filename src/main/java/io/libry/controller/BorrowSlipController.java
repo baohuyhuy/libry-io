@@ -1,5 +1,6 @@
 package io.libry.controller;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.slip.BorrowSlipRequest;
 import io.libry.dto.slip.BorrowSlipResponse;
 import io.libry.dto.slip.ReturnSlipRequest;
@@ -8,12 +9,13 @@ import io.libry.entity.BorrowSlip;
 import io.libry.service.BorrowSlipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/borrow-slips")
@@ -42,8 +44,8 @@ public class BorrowSlipController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BorrowSlipResponse>> getAllBorrowSlips() {
-        return ResponseEntity.ok(borrowSlipService.getAllBorrowSlips());
+    public ResponseEntity<PaginatedResponse<BorrowSlipResponse>> getAllBorrowSlips(@PageableDefault(sort = "slipId") Pageable pageable) {
+        return ResponseEntity.ok(borrowSlipService.getAllBorrowSlips(pageable));
     }
 
     @PatchMapping("/{id}/return")

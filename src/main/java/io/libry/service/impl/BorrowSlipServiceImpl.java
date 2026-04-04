@@ -1,5 +1,6 @@
 package io.libry.service.impl;
 
+import io.libry.dto.PaginatedResponse;
 import io.libry.dto.slip.BorrowSlipRequest;
 import io.libry.dto.slip.BorrowSlipResponse;
 import io.libry.dto.slip.ReturnSlipRequest;
@@ -14,8 +15,11 @@ import io.libry.repository.ReaderRepository;
 import io.libry.service.BorrowSlipService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.data.domain.PageImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,7 +27,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -112,12 +118,19 @@ public class BorrowSlipServiceImpl implements BorrowSlipService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<BorrowSlipResponse> getAllBorrowSlips() {
-        return borrowSlipRepository
-                .findAllWithDetails()
+    public PaginatedResponse<BorrowSlipResponse> getAllBorrowSlips(Pageable pageable) {
+        var idPage = borrowSlipRepository.findPageOfIds(pageable);
+        List<Long> ids = idPage.getContent();
+        if (ids.isEmpty()) {
+            return PaginatedResponse.from(idPage.map(id -> (BorrowSlipResponse) null));
+        }
+        Map<Long, BorrowSlipResponse> byId = borrowSlipRepository.findAllWithDetailsByIds(ids)
                 .stream()
-                .map(BorrowSlipResponse::from)
-                .toList();
+                .collect(Collectors.toMap(BorrowSlip::getSlipId, BorrowSlipResponse::from));
+        List<BorrowSlipResponse> responses = ids.stream()
+                .map(byId::get)
+                .collect(Collectors.toList());
+        return PaginatedResponse.from(new PageImpl<>(responses, pageable, idPage.getTotalElements()));
     }
 
     @Transactional

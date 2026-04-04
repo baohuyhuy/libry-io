@@ -267,7 +267,7 @@ class BorrowSlipIntegrationTest {
         mockMvc
                 .perform(get("/api/borrow-slips").header("Authorization", jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)));
+                .andExpect(jsonPath("$.data", hasSize(2)));
     }
 
     // --- PATCH /api/borrow-slips/{id}/return ---
